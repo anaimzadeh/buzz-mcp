@@ -1,0 +1,109 @@
+# Buzz Domain Model
+
+## Status
+
+Draft.
+
+## Principle
+
+The MCP contract exposes stable Buzz concepts, not raw DLAP XML. DLAP command
+shape can change behind the service layer as long as these domain contracts hold.
+
+## Core Entities
+
+### Domain
+
+Represents a Buzz tenant or domain.
+
+Required fields:
+
+- `id`
+- `name`
+
+### User
+
+Represents a Buzz user.
+
+Required fields:
+
+- `id`
+- `display_name`
+- `reference`
+
+### Course
+
+Represents a course or course-like entity.
+
+Required fields:
+
+- `entityid`
+- `title`
+- `type`
+
+### Enrollment
+
+Represents a user's enrollment in a course.
+
+Required fields:
+
+- `enrollmentid`
+- `entityid`
+- `userid`
+- `role`
+- `status`
+
+### ActivityItem
+
+Represents an item in a course manifest.
+
+Required fields:
+
+- `itemid`
+- `title`
+- `type`
+- `abbreviation`
+- `accepts_file_upload`
+- `allowed_filetypes`
+- `dropbox_multiple`
+- `perfect_score`
+- `due_date`
+
+### Question
+
+Represents an assessment or activity question.
+
+Required fields:
+
+- `questionid`
+- `body`
+- `interaction_type`
+- `choices`
+
+### Submission
+
+Represents a submitted attempt or assignment package.
+
+Required fields:
+
+- `enrollmentid`
+- `itemid`
+- `activity`
+- `student_attachments`
+- `q_and_a_pairs`
+
+### Attachment
+
+Represents a submitted file or external document link.
+
+Required fields:
+
+- `name`
+- `path`
+- `type`
+- `source`
+- `download_url`
+
+## ID Policy
+
+The server must use explicit Buzz IDs in tool inputs. Opaque convenience IDs may
+be accepted only if they decode into the required Buzz IDs.

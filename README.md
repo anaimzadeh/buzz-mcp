@@ -1,6 +1,12 @@
-# Buzz Submission MCP
+# Agilix Buzz MCP
 
-FastMCP server that turns Agilix Buzz student submissions into a human-readable JSON report — activity name resolved from the item ID, answers resolved from question/choice IDs, and authenticated download URLs for any submitted PDFs or other attachments.
+FastMCP server proof of concept for an official-quality Agilix Buzz MCP.
+The current read-only surface turns Buzz student submissions into
+human-readable JSON reports — activity names resolved from item IDs, answers
+resolved from question/choice IDs, and authenticated download URLs for submitted
+PDFs or other attachments.
+
+The spec-driven roadmap lives in [`docs/specs`](docs/specs).
 
 ## Environment
 
@@ -24,9 +30,40 @@ python -m buzz_submission_mcp.server
 PYTHONPATH=src python -m unittest discover -s tests
 ```
 
-## Tool
+## PoC Tools
 
-`get_complete_submission_report` accepts explicit IDs:
+The preferred tool names use the `buzz.` namespace:
+
+| Tool | Purpose |
+| --- | --- |
+| `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
+| `buzz.get_submission_report` | Return a human-readable submission report. |
+| `buzz.get_attachment_url` | Build an authenticated URL for a known submission attachment path. |
+| `get_complete_submission_report` | Backward-compatible alias for `buzz.get_submission_report`. |
+
+## Resources
+
+The PoC exposes read-only resource templates:
+
+```text
+buzz://course/{entityid}/item/{itemid}
+buzz://submission/{enrollmentid}/{itemid}/report{?entityid}
+```
+
+## Prompts
+
+The PoC includes prompt templates for common workflows:
+
+```text
+buzz.summarize_submission
+buzz.draft_student_feedback
+buzz.troubleshoot_submission_access
+```
+
+## Submission Report Tool
+
+`buzz.get_submission_report` and `get_complete_submission_report` accept
+explicit IDs:
 
 ```json
 {
