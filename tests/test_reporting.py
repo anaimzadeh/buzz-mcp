@@ -271,8 +271,20 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(request.entityid, "4378")
 
     def test_normalize_submission_request_explains_missing_real_buzz_ids(self) -> None:
-        with self.assertRaisesRegex(BuzzApiError, "GetStudentSubmission uses enrollmentid and itemid"):
+        with self.assertRaisesRegex(
+            BuzzApiError, "GetStudentSubmission uses enrollmentid and itemid"
+        ) as raised:
             normalize_submission_request(submissionid="single-id")
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(
+            raised.exception.details,
+            {"missing_ids": ["enrollmentid", "itemid", "entityid"]},
+        )
+
+    def test_bad_submissionid_json_is_invalid_id(self) -> None:
+        with self.assertRaisesRegex(BuzzApiError, "looked like JSON") as raised:
+            normalize_submission_request(submissionid="{not json")
+        self.assertEqual(raised.exception.code, "INVALID_ID")
 
 
 if __name__ == "__main__":

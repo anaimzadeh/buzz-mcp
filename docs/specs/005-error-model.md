@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft.
+Partially implemented for local STDIO read-only flows.
 
 ## Error Codes
 
@@ -46,6 +46,9 @@ Tool execution errors should include:
 - `message`
 - `retryable`
 - `details` with safe, non-secret context
+
+The Python implementation exposes this shape through `BuzzApiError.to_dict()`
+while preserving normal exception behavior for MCP transports.
 
 ## Redaction
 

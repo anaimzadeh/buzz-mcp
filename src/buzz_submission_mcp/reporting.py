@@ -122,7 +122,9 @@ def normalize_submission_request(
             "Missing required Buzz ID(s): "
             + ", ".join(missing)
             + ". GetStudentSubmission uses enrollmentid and itemid; "
-            "GetItemList/ListQuestions also need entityid."
+            "GetItemList/ListQuestions also need entityid.",
+            code="INVALID_ID",
+            details={"missing_ids": missing},
         )
 
     return SubmissionRequest(
@@ -216,16 +218,25 @@ def extract_item_info(item_xml: str) -> ItemInfo:
     root = parse_xml(item_xml, "GetItem/GetItemList payload")
     item_element = _find_item_element(root)
     if item_element is None:
-        raise BuzzApiError("Response did not include an <item> element to resolve the activity name.")
+        raise BuzzApiError(
+            "Response did not include an <item> element to resolve the activity name.",
+            code="NOT_FOUND",
+        )
 
     data = first_child(item_element, "data")
     if data is None:
-        raise BuzzApiError("Item response missing <data> block; cannot resolve title/type.")
+        raise BuzzApiError(
+            "Item response missing <data> block; cannot resolve title/type.",
+            details={"parser": "extract_item_info"},
+        )
 
     itemid = item_element.attrib.get("id") or item_element.attrib.get("itemid") or ""
     title = _data_text(data, "title")
     if not title:
-        raise BuzzApiError("Item <data> did not include a <title> value.")
+        raise BuzzApiError(
+            "Item <data> did not include a <title> value.",
+            details={"parser": "extract_item_info"},
+        )
 
     return ItemInfo(
         itemid=itemid,
@@ -436,7 +447,8 @@ def flatten_submission_answers(submission_xml: str) -> list[AnswerRecord]:
     if not records:
         raise BuzzApiError(
             "No question answers were found in the submission XML. "
-            "Expected nested <submission type=\"question\"> nodes."
+            "Expected nested <submission type=\"question\"> nodes.",
+            code="INVALID_ID",
         )
     return list(records)
 
@@ -749,7 +761,10 @@ def parse_xml(xml_text: str, label: str) -> ET.Element:
     try:
         return ET.fromstring(xml_text)
     except ET.ParseError as exc:
-        raise BuzzApiError(f"{label} was not valid XML: {exc}") from exc
+        raise BuzzApiError(
+            f"{label} was not valid XML: {exc}",
+            details={"payload": label},
+        ) from exc
 
 
 def local_name(tag: str) -> str:
@@ -794,17 +809,22 @@ def _parse_submissionid(submissionid: str) -> dict[str, str]:
             decoded = json.loads(value)
         except json.JSONDecodeError as exc:
             raise BuzzApiError(
-                f"submissionid looked like JSON but could not be parsed: {exc}"
+                f"submissionid looked like JSON but could not be parsed: {exc}",
+                code="INVALID_ID",
             ) from exc
         if not isinstance(decoded, dict):
-            raise BuzzApiError("submissionid JSON must be an object.")
+            raise BuzzApiError(
+                "submissionid JSON must be an object.",
+                code="INVALID_ID",
+            )
         return {str(key).lower(): str(val) for key, val in decoded.items() if val is not None}
 
     if ":" in value:
         parts = value.split(":")
         if len(parts) not in {2, 3}:
             raise BuzzApiError(
-                "Colon-form submissionid must be enrollmentid:itemid or enrollmentid:itemid:entityid."
+                "Colon-form submissionid must be enrollmentid:itemid or enrollmentid:itemid:entityid.",
+                code="INVALID_ID",
             )
         keys = ["enrollmentid", "itemid", "entityid"]
         return dict(zip(keys, parts))

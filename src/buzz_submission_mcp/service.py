@@ -105,11 +105,15 @@ class BuzzReadService:
     ) -> dict[str, Any]:
         if source not in {"submission", "attempt-question"}:
             raise BuzzApiError(
-                "source must be 'submission' or 'attempt-question'."
+                "source must be 'submission' or 'attempt-question'.",
+                code="INVALID_ID",
+                details={"field": "source"},
             )
         if source == "attempt-question" and not partid:
             raise BuzzApiError(
-                "partid is required when source is 'attempt-question'."
+                "partid is required when source is 'attempt-question'.",
+                code="INVALID_ID",
+                details={"field": "partid"},
             )
 
         client = self._client_factory()
@@ -141,7 +145,13 @@ class BuzzReadService:
     ) -> str:
         try:
             return client.get_item(entityid=entityid, itemid=itemid)
-        except BuzzApiError:
+        except BuzzApiError as exc:
+            if exc.code in {
+                "AUTH_REQUIRED",
+                "INSUFFICIENT_BUZZ_RIGHTS",
+                "RATE_LIMITED",
+            }:
+                raise
             return client.get_item_list(entityid=entityid, itemid=itemid)
 
     def _get_question_xml(
@@ -154,7 +164,13 @@ class BuzzReadService:
             return client.list_questions(
                 entityid=request.entityid, questionids=questionids
             )
-        except BuzzApiError:
+        except BuzzApiError as exc:
+            if exc.code in {
+                "AUTH_REQUIRED",
+                "INSUFFICIENT_BUZZ_RIGHTS",
+                "RATE_LIMITED",
+            }:
+                raise
             return client.get_question_list(
                 entityid=request.entityid, questionids=questionids
             )

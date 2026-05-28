@@ -4,14 +4,54 @@ import os
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
+BuzzErrorCode = Literal[
+    "AUTH_REQUIRED",
+    "INSUFFICIENT_BUZZ_RIGHTS",
+    "NOT_FOUND",
+    "RATE_LIMITED",
+    "BUZZ_API_ERROR",
+    "INVALID_ID",
+    "UNSUPPORTED_ACTIVITY_TYPE",
+    "REDACTED_FOR_PRIVACY",
+]
+
+
+RETRYABLE_ERROR_CODES = {"RATE_LIMITED"}
+
+
 class BuzzApiError(RuntimeError):
     """Raised when Buzz returns an HTTP, authentication, or DLAP-level error."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        code: BuzzErrorCode = "BUZZ_API_ERROR",
+        retryable: bool | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = (
+            retryable if retryable is not None else code in RETRYABLE_ERROR_CODES
+        )
+        self.details = details or {}
+
+    def to_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "code": self.code,
+            "message": str(self),
+            "retryable": self.retryable,
+        }
+        if self.details:
+            payload["details"] = self.details
+        return payload
 
 
 @dataclass(frozen=True)
@@ -36,7 +76,9 @@ class BuzzCredentials:
         if missing:
             raise BuzzApiError(
                 "Missing Buzz authentication environment variables: "
-                + ", ".join(missing)
+                + ", ".join(missing),
+                code="AUTH_REQUIRED",
+                details={"missing_env": missing},
             )
         return cls(
             username=os.environ["BUZZ_USERNAME"],
@@ -95,7 +137,11 @@ class BuzzClient:
             token = user.attrib.get("token")
         token = token or root.attrib.get("_token") or root.attrib.get("token")
         if not token:
-            raise BuzzApiError("Login3 succeeded but no authentication token was returned.")
+            raise BuzzApiError(
+                "Login3 succeeded but no authentication token was returned.",
+                code="AUTH_REQUIRED",
+                details={"command": "Login3"},
+            )
         self._token = token
         return token
 
@@ -132,13 +178,19 @@ class BuzzClient:
             params["itemid"] = itemid
         else:
             raise BuzzApiError(
-                "list_questions requires questionids or itemid to scope the request."
+                "list_questions requires questionids or itemid to scope the request.",
+                code="INVALID_ID",
+                details={"command": "ListQuestions"},
             )
         return self._get_text("ListQuestions", params)
 
     def get_question_list(self, *, entityid: str, questionids: list[str]) -> str:
         if not questionids:
-            raise BuzzApiError("Cannot fetch questions because no question IDs were found.")
+            raise BuzzApiError(
+                "Cannot fetch questions because no question IDs were found.",
+                code="INVALID_ID",
+                details={"command": "GetQuestionList"},
+            )
         params = {
             "cmd": "getquestionlist",
             "entityid": entityid,
@@ -232,17 +284,27 @@ class BuzzClient:
                 )
         except HTTPError as exc:
             error_body = exc.read().decode("utf-8", errors="replace")
+            code = _code_for_http_status(exc.code)
             raise BuzzApiError(
                 f"{command} failed with HTTP {exc.code}: "
-                f"{redact_secrets(error_body[:500])}"
+                f"{redact_secrets(error_body[:500])}",
+                code=code,
+                retryable=code == "RATE_LIMITED" or exc.code >= 500,
+                details={"command": command, "http_status": exc.code},
             ) from exc
         except URLError as exc:
             raise BuzzApiError(
-                f"{command} failed to reach Buzz: {redact_secrets(str(exc.reason))}"
+                f"{command} failed to reach Buzz: {redact_secrets(str(exc.reason))}",
+                retryable=True,
+                details={"command": command},
             ) from exc
 
         if not text.strip():
-            raise BuzzApiError(f"{command} returned an empty payload.")
+            raise BuzzApiError(
+                f"{command} returned an empty payload.",
+                retryable=True,
+                details={"command": command},
+            )
         return text
 
     def _open_url(self, request: Request) -> Any:
@@ -253,7 +315,10 @@ def _parse_xml(xml_text: str, label: str) -> ET.Element:
     try:
         return ET.fromstring(xml_text)
     except ET.ParseError as exc:
-        raise BuzzApiError(f"{label} was not valid XML: {exc}") from exc
+        raise BuzzApiError(
+            f"{label} was not valid XML: {exc}",
+            details={"payload": label},
+        ) from exc
 
 
 def _local_name(tag: str) -> str:
@@ -273,11 +338,46 @@ def _raise_for_dlap_error(root: ET.Element, command: str) -> None:
         code = element.attrib.get("code")
         if code and code.upper() != "OK":
             message = element.attrib.get("message") or _text(element) or "No message returned."
-            raise BuzzApiError(f"{command} returned {code}: {redact_secrets(message)}")
+            error_code = _code_for_dlap_error(command, code, message)
+            raise BuzzApiError(
+                f"{command} returned {code}: {redact_secrets(message)}",
+                code=error_code,
+                retryable=error_code == "RATE_LIMITED",
+                details={"command": command, "dlap_code": code},
+            )
 
 
 def _text(element: ET.Element) -> str:
     return " ".join(part.strip() for part in element.itertext() if part and part.strip())
+
+
+def _code_for_http_status(status: int) -> BuzzErrorCode:
+    if status == 401:
+        return "AUTH_REQUIRED"
+    if status == 403:
+        return "INSUFFICIENT_BUZZ_RIGHTS"
+    if status == 404:
+        return "NOT_FOUND"
+    if status == 429:
+        return "RATE_LIMITED"
+    return "BUZZ_API_ERROR"
+
+
+def _code_for_dlap_error(command: str, dlap_code: str, message: str) -> BuzzErrorCode:
+    combined = f"{dlap_code} {message}".lower()
+    if command.lower().startswith("login"):
+        return "AUTH_REQUIRED"
+    if any(term in combined for term in ("unauthor", "auth", "login", "token")):
+        return "AUTH_REQUIRED"
+    if any(
+        term in combined for term in ("denied", "forbidden", "rights", "permission")
+    ):
+        return "INSUFFICIENT_BUZZ_RIGHTS"
+    if any(term in combined for term in ("not found", "notfound", "missing")):
+        return "NOT_FOUND"
+    if any(term in combined for term in ("rate", "throttle", "too many")):
+        return "RATE_LIMITED"
+    return "BUZZ_API_ERROR"
 
 
 SECRET_FIELD_NAMES = (

@@ -125,6 +125,21 @@ class BuzzReadServiceTests(unittest.TestCase):
         self.assertEqual(activity["title"], "Assignment 12")
         self.assertIn("get_item_list:4378:assign12", client.calls)
 
+    def test_get_activity_does_not_fallback_on_auth_error(self) -> None:
+        class AuthFailClient(FakeClient):
+            def get_item(self, *, entityid: str, itemid: str) -> str:
+                self.calls.append(f"get_item:{entityid}:{itemid}")
+                raise BuzzApiError("auth failed", code="AUTH_REQUIRED")
+
+        client = AuthFailClient()
+        service = BuzzReadService(lambda: client)
+
+        with self.assertRaises(BuzzApiError) as raised:
+            service.get_activity(entityid="4378", itemid="assign12")
+
+        self.assertEqual(raised.exception.code, "AUTH_REQUIRED")
+        self.assertNotIn("get_item_list:4378:assign12", client.calls)
+
     def test_get_submission_report_uses_buzz_workflow_and_url_builder(self) -> None:
         client = FakeClient()
         service = BuzzReadService(lambda: client)
@@ -145,13 +160,15 @@ class BuzzReadServiceTests(unittest.TestCase):
     def test_get_attachment_url_validates_attempt_partid(self) -> None:
         service = BuzzReadService(FakeClient)
 
-        with self.assertRaisesRegex(BuzzApiError, "partid is required"):
+        with self.assertRaisesRegex(BuzzApiError, "partid is required") as raised:
             service.get_attachment_url(
                 enrollmentid="4317",
                 itemid="assign12",
                 filepath="paper.pdf",
                 source="attempt-question",
             )
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(raised.exception.details, {"field": "partid"})
 
     def test_get_attachment_url_returns_attempt_url(self) -> None:
         service = BuzzReadService(FakeClient)
