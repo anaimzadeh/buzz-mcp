@@ -36,6 +36,24 @@ class FakeService:
         activity["id"] = itemid
         return activity
 
+    def list_activities(self, *, entityid: str) -> dict[str, object]:
+        activity = dict(ACTIVITY)
+        activity["entityid"] = entityid
+        lesson = {
+            **ACTIVITY,
+            "id": "lesson1",
+            "entityid": entityid,
+            "title": "Lesson 1",
+            "type": "Lesson",
+            "abbreviation": "L1",
+            "accepts_file_upload": False,
+            "allowed_filetypes": "",
+            "dropbox_multiple": False,
+            "perfect_score": "",
+            "due_date": "",
+        }
+        return {"entityid": entityid, "count": 2, "activities": [activity, lesson]}
+
     def get_submission_report(self, **kwargs: object) -> dict[str, object]:
         return REPORT
 
@@ -57,6 +75,7 @@ class ServerContractTests(unittest.TestCase):
 
         for name in {
             "buzz.get_activity",
+            "buzz.list_activities",
             "buzz.get_submission_report",
             "buzz.get_attachment_url",
             "get_complete_submission_report",
@@ -76,6 +95,7 @@ class ServerContractTests(unittest.TestCase):
         templates = asyncio.run(run())
 
         self.assertIn("buzz://course/{entityid}/item/{itemid}", templates)
+        self.assertIn("buzz://course/{entityid}/manifest", templates)
         self.assertIn(
             "buzz://submission/{enrollmentid}/{itemid}/report{?entityid}",
             templates,
@@ -114,6 +134,39 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertEqual(activity["entityid"], "4378")
         self.assertEqual(activity["id"], "assign12")
+
+    def test_mcp_tool_call_returns_structured_activity_list(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.list_activities",
+                    {"entityid": "4378"},
+                )
+            return result.structured_content
+
+        manifest = asyncio.run(run())
+
+        self.assertEqual(manifest["entityid"], "4378")
+        self.assertEqual(manifest["count"], 2)
+        self.assertEqual(
+            [activity["id"] for activity in manifest["activities"]],
+            ["assign12", "lesson1"],
+        )
+
+    def test_course_manifest_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource(
+                    "buzz://course/4378/manifest"
+                )
+            return json.loads(result.contents[0].content)
+
+        manifest = asyncio.run(run())
+
+        self.assertEqual(
+            [activity["id"] for activity in manifest["activities"]],
+            ["assign12", "lesson1"],
+        )
 
     def test_submission_report_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

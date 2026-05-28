@@ -9,6 +9,7 @@ except ImportError:  # pragma: no cover - compatibility with older MCP SDK layou
 
 from .buzz_client import BuzzApiError
 from .schemas import (
+    ACTIVITY_LIST_SCHEMA,
     ACTIVITY_SCHEMA,
     ATTACHMENT_URL_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
@@ -33,6 +34,18 @@ def get_activity(entityid: str, itemid: str) -> dict[str, Any]:
     """Fetch normalized metadata for a Buzz course activity."""
 
     return _service().get_activity(entityid=entityid, itemid=itemid)
+
+
+@mcp.tool(
+    name="buzz.list_activities",
+    title="List Buzz Activities",
+    description="Fetch normalized metadata for every activity item in a Buzz course.",
+    output_schema=schema(ACTIVITY_LIST_SCHEMA),
+)
+def list_activities(entityid: str) -> dict[str, Any]:
+    """Fetch normalized metadata for Buzz course activity items."""
+
+    return _service().list_activities(entityid=entityid)
 
 
 @mcp.tool(
@@ -126,6 +139,17 @@ def get_complete_submission_report(
 )
 def activity_resource(entityid: str, itemid: str) -> dict[str, Any]:
     return get_activity(entityid=entityid, itemid=itemid)
+
+
+@mcp.resource(
+    "buzz://course/{entityid}/manifest",
+    name="buzz.course_manifest",
+    title="Buzz Course Manifest",
+    description="Normalized metadata for every activity item in a Buzz course.",
+    mime_type="application/json",
+)
+def course_manifest_resource(entityid: str) -> dict[str, Any]:
+    return list_activities(entityid=entityid)
 
 
 @mcp.resource(

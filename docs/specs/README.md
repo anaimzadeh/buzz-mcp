@@ -17,8 +17,10 @@ Read in order:
 The implemented PoC covers the read-only submission review slice:
 
 - `buzz.get_activity`
+- `buzz.list_activities`
 - `buzz.get_submission_report`
 - `buzz.get_attachment_url`
+- `buzz://course/{entityid}/manifest`
 - `buzz://course/{entityid}/item/{itemid}`
 - `buzz://submission/{enrollmentid}/{itemid}/report{?entityid}`
 - `buzz.summarize_submission`

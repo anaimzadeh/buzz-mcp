@@ -8,6 +8,7 @@ from .reporting import (
     SubmissionRequest,
     build_complete_submission_report,
     extract_item_info,
+    extract_item_infos,
     extract_question_ids,
     normalize_submission_request,
 )
@@ -55,6 +56,22 @@ class BuzzReadService:
         try:
             item_xml = self._get_item_xml(client, entityid=entityid, itemid=itemid)
             return activity_to_dict(extract_item_info(item_xml), entityid=entityid)
+        finally:
+            client.close()
+
+    def list_activities(self, *, entityid: str) -> dict[str, Any]:
+        client = self._client_factory()
+        try:
+            item_xml = client.get_item_list(entityid=entityid)
+            activities = [
+                activity_to_dict(item, entityid=entityid)
+                for item in extract_item_infos(item_xml)
+            ]
+            return {
+                "entityid": entityid,
+                "count": len(activities),
+                "activities": activities,
+            }
         finally:
             client.close()
 

@@ -54,6 +54,7 @@ The preferred tool names use the `buzz.` namespace:
 | Tool | Purpose |
 | --- | --- |
 | `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
+| `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
 | `buzz.get_submission_report` | Return a human-readable submission report. |
 | `buzz.get_attachment_url` | Build an authenticated URL for a known submission attachment path. |
 | `get_complete_submission_report` | Backward-compatible alias for `buzz.get_submission_report`. |
@@ -63,6 +64,7 @@ The preferred tool names use the `buzz.` namespace:
 The PoC exposes read-only resource templates:
 
 ```text
+buzz://course/{entityid}/manifest
 buzz://course/{entityid}/item/{itemid}
 buzz://submission/{enrollmentid}/{itemid}/report{?entityid}
 ```

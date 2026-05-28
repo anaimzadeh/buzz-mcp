@@ -222,7 +222,29 @@ def extract_item_info(item_xml: str) -> ItemInfo:
             "Response did not include an <item> element to resolve the activity name.",
             code="NOT_FOUND",
         )
+    return _item_info_from_element(item_element)
 
+
+def extract_item_infos(item_xml: str) -> list[ItemInfo]:
+    """Return every item in a GetItemList-style payload."""
+
+    root = parse_xml(item_xml, "GetItemList payload")
+    items = [_item_info_from_element(element) for element in _find_item_elements(root)]
+    if not items:
+        raise BuzzApiError(
+            "Response did not include any <item> elements to resolve activities.",
+            code="NOT_FOUND",
+        )
+    return items
+
+
+def extract_activity_title(item_xml: str) -> str:
+    """Backwards-compatible shortcut used by older callers and tests."""
+
+    return extract_item_info(item_xml).title
+
+
+def _item_info_from_element(item_element: ET.Element) -> ItemInfo:
     data = first_child(item_element, "data")
     if data is None:
         raise BuzzApiError(
@@ -251,17 +273,16 @@ def extract_item_info(item_xml: str) -> ItemInfo:
     )
 
 
-def extract_activity_title(item_xml: str) -> str:
-    """Backwards-compatible shortcut used by older callers and tests."""
-
-    return extract_item_info(item_xml).title
-
-
 def _find_item_element(root: ET.Element) -> ET.Element | None:
-    for element in root.iter():
-        if local_name(element.tag) == "item" and first_child(element, "data") is not None:
-            return element
-    return None
+    return next(iter(_find_item_elements(root)), None)
+
+
+def _find_item_elements(root: ET.Element) -> list[ET.Element]:
+    return [
+        element
+        for element in root.iter()
+        if local_name(element.tag) == "item" and first_child(element, "data") is not None
+    ]
 
 
 def _data_text(data: ET.Element, name: str) -> str:

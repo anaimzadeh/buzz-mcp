@@ -26,6 +26,15 @@ buzz://course/{entityid}/item/{itemid}
 
 Returns normalized `ActivityItem` JSON.
 
+### Course Manifest
+
+```text
+buzz://course/{entityid}/manifest
+```
+
+Returns `entityid`, `count`, and an `activities` array containing normalized
+`ActivityItem` JSON.
+
 ## Rules
 
 - Resource URIs must not include DLAP tokens, passwords, or signed attachment URLs.
@@ -37,7 +46,6 @@ Returns normalized `ActivityItem` JSON.
 
 ```text
 buzz://course/{entityid}
-buzz://course/{entityid}/manifest
 buzz://enrollment/{enrollmentid}/gradebook
 buzz://submission/{enrollmentid}/{itemid}
 buzz://user/{userid}

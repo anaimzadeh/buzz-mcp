@@ -7,6 +7,7 @@ from buzz_submission_mcp.reporting import (
     SubmissionRequest,
     build_complete_submission_report,
     extract_item_info,
+    extract_item_infos,
     extract_question_ids,
     extract_questions,
     flatten_submission_answers,
@@ -48,6 +49,30 @@ ITEM_XML = """
         <perfectscore>10</perfectscore>
         <duedate>2025-09-01T23:59:00Z</duedate>
         <dropbox2 version="1" type="2" multiple="true" filetypes=".pdf,.docx" />
+      </data>
+    </item>
+  </items>
+</response>
+"""
+
+ITEM_LIST_XML = """
+<response code="OK">
+  <items>
+    <item id="assign12">
+      <data>
+        <type>Assignment</type>
+        <title>Assignment 12</title>
+        <abbreviation>A12</abbreviation>
+        <perfectscore>10</perfectscore>
+        <duedate>2025-09-01T23:59:00Z</duedate>
+        <dropbox2 version="1" type="2" multiple="true" filetypes=".pdf,.docx" />
+      </data>
+    </item>
+    <item id="lesson1">
+      <data>
+        <type>Lesson</type>
+        <title>Lesson 1</title>
+        <abbreviation>L1</abbreviation>
       </data>
     </item>
   </items>
@@ -112,6 +137,14 @@ class ReportingTests(unittest.TestCase):
         self.assertTrue(info.dropbox_multiple)
         self.assertEqual(info.perfect_score, "10")
         self.assertTrue(info.is_assignment)
+
+    def test_extract_item_infos_returns_all_items_in_order(self) -> None:
+        infos = extract_item_infos(ITEM_LIST_XML)
+
+        self.assertEqual([info.itemid for info in infos], ["assign12", "lesson1"])
+        self.assertEqual([info.title for info in infos], ["Assignment 12", "Lesson 1"])
+        self.assertTrue(infos[0].accepts_file_upload)
+        self.assertFalse(infos[1].accepts_file_upload)
 
     def test_extract_item_info_recognizes_custom_activity_without_dropbox(self) -> None:
         xml = """

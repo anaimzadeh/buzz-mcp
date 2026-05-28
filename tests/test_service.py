@@ -33,6 +33,30 @@ ITEM_XML = """
 </response>
 """
 
+ITEM_LIST_XML = """
+<response code="OK">
+  <items>
+    <item id="assign12">
+      <data>
+        <type>Assignment</type>
+        <title>Assignment 12</title>
+        <abbreviation>A12</abbreviation>
+        <perfectscore>10</perfectscore>
+        <duedate>2025-09-01T23:59:00Z</duedate>
+        <dropbox2 type="2" multiple="true" filetypes=".pdf" />
+      </data>
+    </item>
+    <item id="lesson1">
+      <data>
+        <type>Lesson</type>
+        <title>Lesson 1</title>
+        <abbreviation>L1</abbreviation>
+      </data>
+    </item>
+  </items>
+</response>
+"""
+
 QUESTION_XML = """
 <response code="OK">
   <question questionid="q-choice">
@@ -69,7 +93,7 @@ class FakeClient:
 
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str:
         self.calls.append(f"get_item_list:{entityid}:{itemid}")
-        return ITEM_XML
+        return ITEM_XML if itemid else ITEM_LIST_XML
 
     def list_questions(
         self,
@@ -139,6 +163,25 @@ class BuzzReadServiceTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "AUTH_REQUIRED")
         self.assertNotIn("get_item_list:4378:assign12", client.calls)
+
+    def test_list_activities_returns_normalized_manifest(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        manifest = service.list_activities(entityid="4378")
+
+        self.assertTrue(client.closed)
+        self.assertEqual(manifest["entityid"], "4378")
+        self.assertEqual(manifest["count"], 2)
+        activities = manifest["activities"]
+        self.assertEqual(
+            [activity["id"] for activity in activities],
+            ["assign12", "lesson1"],
+        )
+        self.assertEqual(activities[0]["entityid"], "4378")
+        self.assertTrue(activities[0]["accepts_file_upload"])
+        self.assertFalse(activities[1]["accepts_file_upload"])
+        self.assertIn("get_item_list:4378:None", client.calls)
 
     def test_get_submission_report_uses_buzz_workflow_and_url_builder(self) -> None:
         client = FakeClient()

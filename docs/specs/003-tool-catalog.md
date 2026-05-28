@@ -25,6 +25,20 @@ Output:
 
 - `ActivityItem`.
 
+### `buzz.list_activities`
+
+Fetch normalized metadata for every visible activity item in a course.
+
+Inputs:
+
+- `entityid` string, required.
+
+Output:
+
+- `entityid`
+- `count`
+- `activities` array of `ActivityItem`.
+
 ### `buzz.get_submission_report`
 
 Fetch and normalize a complete human-readable submission report.
@@ -63,7 +77,6 @@ Output:
 - `buzz.list_courses`
 - `buzz.get_user`
 - `buzz.list_enrollments`
-- `buzz.list_activities`
 - `buzz.get_gradebook`
 - `buzz.get_submission_state`
 - `buzz.search_course_content`

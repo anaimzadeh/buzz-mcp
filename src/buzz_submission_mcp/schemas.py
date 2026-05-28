@@ -49,6 +49,17 @@ ACTIVITY_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+ACTIVITY_LIST_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "entityid": STRING,
+        "count": {"type": "integer"},
+        "activities": {"type": "array", "items": ACTIVITY_SCHEMA},
+    },
+    "required": ["entityid", "count", "activities"],
+    "additionalProperties": False,
+}
+
 QA_PAIR_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {

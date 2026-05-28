@@ -49,6 +49,18 @@ class LiveBuzzSandboxTests(unittest.TestCase):
         self.assertIn("accepts_file_upload", activity)
         self.assertIn("due_date", activity)
 
+    def test_live_list_activities_contract(self) -> None:
+        manifest = self.service.list_activities(entityid=self.entityid)
+
+        self.assertEqual(manifest["entityid"], self.entityid)
+        self.assertGreaterEqual(manifest["count"], 1)
+        self.assertIsInstance(manifest["activities"], list)
+        self.assertEqual(manifest["count"], len(manifest["activities"]))
+        self.assertIn(
+            self.itemid,
+            {activity["id"] for activity in manifest["activities"]},
+        )
+
     def test_live_get_submission_report_contract(self) -> None:
         report = self.service.get_submission_report(
             enrollmentid=self.enrollmentid,
