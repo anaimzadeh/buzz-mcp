@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Any
@@ -224,7 +225,7 @@ class BuzzClient:
         request_headers.update(headers or {})
         request = Request(url, data=body, headers=request_headers, method=method)
         try:
-            with urlopen(request, timeout=self.timeout) as response:
+            with self._open_url(request) as response:
                 text = response.read().decode(
                     response.headers.get_content_charset() or "utf-8",
                     errors="replace",
@@ -232,14 +233,20 @@ class BuzzClient:
         except HTTPError as exc:
             error_body = exc.read().decode("utf-8", errors="replace")
             raise BuzzApiError(
-                f"{command} failed with HTTP {exc.code}: {error_body[:500]}"
+                f"{command} failed with HTTP {exc.code}: "
+                f"{redact_secrets(error_body[:500])}"
             ) from exc
         except URLError as exc:
-            raise BuzzApiError(f"{command} failed to reach Buzz: {exc.reason}") from exc
+            raise BuzzApiError(
+                f"{command} failed to reach Buzz: {redact_secrets(str(exc.reason))}"
+            ) from exc
 
         if not text.strip():
             raise BuzzApiError(f"{command} returned an empty payload.")
         return text
+
+    def _open_url(self, request: Request) -> Any:
+        return urlopen(request, timeout=self.timeout)
 
 
 def _parse_xml(xml_text: str, label: str) -> ET.Element:
@@ -266,8 +273,51 @@ def _raise_for_dlap_error(root: ET.Element, command: str) -> None:
         code = element.attrib.get("code")
         if code and code.upper() != "OK":
             message = element.attrib.get("message") or _text(element) or "No message returned."
-            raise BuzzApiError(f"{command} returned {code}: {message}")
+            raise BuzzApiError(f"{command} returned {code}: {redact_secrets(message)}")
 
 
 def _text(element: ET.Element) -> str:
     return " ".join(part.strip() for part in element.itertext() if part and part.strip())
+
+
+SECRET_FIELD_NAMES = (
+    "_token",
+    "token",
+    "password",
+    "sessionid",
+    "access_token",
+    "refresh_token",
+)
+
+
+def redact_secrets(value: str) -> str:
+    """Redact common Buzz credential and token shapes from diagnostic text."""
+
+    redacted = value
+    field_pattern = "|".join(re.escape(name) for name in SECRET_FIELD_NAMES)
+    redacted = re.sub(
+        rf"(?i)([?&](?:{field_pattern})=)[^&\s\"'<>]+",
+        r"\1[REDACTED]",
+        redacted,
+    )
+    redacted = re.sub(
+        rf"(?i)(\b(?:{field_pattern})=)[^&\s\"'<>]+",
+        r"\1[REDACTED]",
+        redacted,
+    )
+    redacted = re.sub(
+        rf"(?i)(\b(?:{field_pattern})\s*=\s*[\"'])[^\"']*([\"'])",
+        r"\1[REDACTED]\2",
+        redacted,
+    )
+    redacted = re.sub(
+        rf"(?i)(\"(?:{field_pattern})\"\s*:\s*\")[^\"]*(\")",
+        r"\1[REDACTED]\2",
+        redacted,
+    )
+    redacted = re.sub(
+        rf"(?i)(<(?:{field_pattern})>)[^<]*(</(?:{field_pattern})>)",
+        r"\1[REDACTED]\2",
+        redacted,
+    )
+    return redacted

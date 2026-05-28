@@ -30,6 +30,23 @@ python -m buzz_submission_mcp.server
 PYTHONPATH=src python -m unittest discover -s tests
 ```
 
+Live Buzz sandbox tests are opt-in and skipped by default. To run them, set
+credentials plus a known-safe sandbox submission:
+
+```bash
+export BUZZ_RUN_LIVE_TESTS=1
+export BUZZ_USERNAME="teacher"
+export BUZZ_PASSWORD="secret"
+export BUZZ_DOMAIN="myschool"
+export BUZZ_TEST_ENTITYID="4378"
+export BUZZ_TEST_ITEMID="assign12"
+export BUZZ_TEST_ENROLLMENTID="4317"
+# Optional: validates direct submission attachment URL generation.
+export BUZZ_TEST_ATTACHMENT_FILEPATH="MyPaper.pdf"
+
+PYTHONPATH=src python -m unittest tests.test_live_buzz
+```
+
 ## PoC Tools
 
 The preferred tool names use the `buzz.` namespace:

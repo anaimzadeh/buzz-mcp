@@ -33,6 +33,22 @@ Live Buzz tests are opt-in and require:
 
 Integration tests must be skipped by default.
 
+Run them explicitly with:
+
+```bash
+export BUZZ_RUN_LIVE_TESTS=1
+export BUZZ_USERNAME="teacher"
+export BUZZ_PASSWORD="secret"
+export BUZZ_DOMAIN="myschool"
+export BUZZ_TEST_ENTITYID="4378"
+export BUZZ_TEST_ITEMID="assign12"
+export BUZZ_TEST_ENROLLMENTID="4317"
+PYTHONPATH=src python -m unittest tests.test_live_buzz
+```
+
+`BUZZ_TEST_ATTACHMENT_FILEPATH` is optional and enables direct attachment URL
+contract coverage.
+
 ## Security Tests
 
 - No secrets in exception strings.
