@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import tomllib
 import unittest
 
@@ -71,6 +72,24 @@ class PackagingTests(unittest.TestCase):
             "dist/",
         }:
             self.assertIn(pattern, ignored)
+
+    def test_ci_workflow_runs_release_gate_checks(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
+
+        self.assertIn("name: CI", workflow)
+        self.assertIn("branches: [main]", workflow)
+        self.assertIn("pull_request:", workflow)
+        self.assertIn("actions/checkout@v4", workflow)
+        self.assertIn("actions/setup-python@v5", workflow)
+        self.assertIn('python-version: "3.11"', workflow)
+        self.assertIn(
+            "env PYTHONPATH=src uv run python -m unittest discover -s tests",
+            workflow,
+        )
+        self.assertIn("uv build", workflow)
+        self.assertIn("actions/upload-artifact@v4", workflow)
+        self.assertIn("docker build -t agilix-buzz-mcp:ci .", workflow)
+        self.assertRegex(workflow, re.compile(r"permissions:\s+contents: read", re.S))
 
 
 if __name__ == "__main__":

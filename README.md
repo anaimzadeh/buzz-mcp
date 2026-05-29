@@ -59,6 +59,9 @@ docker run --rm -i \
 PYTHONPATH=src python -m unittest discover -s tests
 ```
 
+CI runs the same skipped-by-default test suite, builds the Python package, and
+builds the Docker image on pushes to `main` and pull requests.
+
 Live Buzz sandbox tests are opt-in and skipped by default. To run them, set
 credentials plus a known-safe sandbox submission:
 

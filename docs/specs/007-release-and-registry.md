@@ -2,8 +2,8 @@
 
 ## Status
 
-Partially implemented for local STDIO package metadata and source-built Docker
-runtime.
+Partially implemented for local STDIO package metadata, source-built Docker
+runtime, and CI release-gate checks.
 
 ## Package Targets
 

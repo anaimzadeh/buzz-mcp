@@ -2,7 +2,8 @@
 
 ## Status
 
-Draft.
+Partially implemented for local and CI unit, contract, package, and Docker
+checks.
 
 ## Unit Tests
 
@@ -60,7 +61,9 @@ contract coverage.
 
 A release candidate requires:
 
-- All unit tests passing.
+- All unit tests passing in CI.
+- Python package build passing in CI.
+- Docker image build passing in CI.
 - MCP Inspector smoke test passing.
 - Live sandbox test passing in a non-production Buzz tenant.
 - Changelog entry.
