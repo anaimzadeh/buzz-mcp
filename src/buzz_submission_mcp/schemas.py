@@ -101,6 +101,59 @@ ATTACHMENT_URL_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+DOC_ENTRY_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "entry_type": {
+            "type": "string",
+            "enum": ["command", "schema", "enum", "concept"],
+        },
+        "name": STRING,
+        "title": STRING,
+        "path": STRING,
+        "source_url": STRING,
+        "summary": STRING,
+        "category": STRING,
+        "current_status": STRING,
+        "method": STRING,
+        "read_only": {"type": "boolean"},
+        "sensitive": {"type": "boolean"},
+        "related": {"type": "array", "items": STRING},
+        "mcp_phase": STRING,
+        "mcp_relevance": STRING,
+        "notes": {"type": "array", "items": STRING},
+    },
+    "required": [
+        "entry_type",
+        "name",
+        "title",
+        "path",
+        "source_url",
+        "summary",
+        "category",
+        "current_status",
+        "method",
+        "read_only",
+        "sensitive",
+        "related",
+        "mcp_phase",
+        "mcp_relevance",
+        "notes",
+    ],
+    "additionalProperties": False,
+}
+
+DOC_SEARCH_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "query": STRING,
+        "count": {"type": "integer"},
+        "results": {"type": "array", "items": DOC_ENTRY_SCHEMA},
+    },
+    "required": ["query", "count", "results"],
+    "additionalProperties": False,
+}
+
 
 def schema(value: dict[str, Any]) -> dict[str, Any]:
     """Return a defensive copy for FastMCP registration."""

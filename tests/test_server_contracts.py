@@ -78,6 +78,9 @@ class ServerContractTests(unittest.TestCase):
             "buzz.list_activities",
             "buzz.get_submission_report",
             "buzz.get_attachment_url",
+            "buzz.docs.search",
+            "buzz.docs.get_command",
+            "buzz.docs.get_schema",
             "get_complete_submission_report",
         }:
             self.assertIn(name, tools)
@@ -85,6 +88,10 @@ class ServerContractTests(unittest.TestCase):
         self.assertEqual(
             tools["buzz.get_attachment_url"].parameters["properties"]["source"]["enum"],
             ["submission", "attempt-question"],
+        )
+        self.assertEqual(
+            tools["buzz.docs.search"].parameters["properties"]["entry_type"]["enum"],
+            ["any", "command", "schema", "enum", "concept"],
         )
 
     def test_server_registers_resource_templates(self) -> None:
@@ -180,6 +187,38 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertEqual(report["activity_title"], "Assignment 12")
         self.assertEqual(report["q_and_a_pairs"][0]["answer"], "Yes")
+
+    def test_mcp_docs_search_returns_structured_metadata(self) -> None:
+        async def run() -> dict[str, object]:
+            result = await server.mcp.call_tool(
+                "buzz.docs.search",
+                {
+                    "query": "student submission",
+                    "entry_type": "command",
+                    "limit": 5,
+                },
+            )
+            return result.structured_content
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["query"], "student submission")
+        names = [entry["name"] for entry in payload["results"]]
+        self.assertIn("GetStudentSubmission", names)
+
+    def test_mcp_docs_get_schema_returns_structured_metadata(self) -> None:
+        async def run() -> dict[str, object]:
+            result = await server.mcp.call_tool(
+                "buzz.docs.get_schema",
+                {"name": "Submission"},
+            )
+            return result.structured_content
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["name"], "Submission")
+        self.assertEqual(payload["path"], "Schema/Submission")
+        self.assertTrue(payload["sensitive"])
 
 
 if __name__ == "__main__":

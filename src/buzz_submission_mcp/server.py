@@ -8,10 +8,13 @@ except ImportError:  # pragma: no cover - compatibility with older MCP SDK layou
     from mcp.server.fastmcp import FastMCP
 
 from .buzz_client import BuzzApiError
+from .docs_catalog import get_command_entry, get_schema_entry, search_docs
 from .schemas import (
     ACTIVITY_LIST_SCHEMA,
     ACTIVITY_SCHEMA,
     ATTACHMENT_URL_SCHEMA,
+    DOC_ENTRY_SCHEMA,
+    DOC_SEARCH_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
     schema,
 )
@@ -128,6 +131,49 @@ def get_complete_submission_report(
         itemid=itemid,
         entityid=entityid,
     )
+
+
+@mcp.tool(
+    name="buzz.docs.search",
+    title="Search Buzz Documentation",
+    description=(
+        "Search the local high-value Buzz documentation catalog for commands, "
+        "schemas, enums, and concepts relevant to MCP implementation."
+    ),
+    output_schema=schema(DOC_SEARCH_SCHEMA),
+)
+def docs_search(
+    query: str = "",
+    entry_type: Literal["any", "command", "schema", "enum", "concept"] = "any",
+    limit: int = 10,
+) -> dict[str, Any]:
+    """Search local Buzz documentation metadata."""
+
+    return search_docs(query=query, entry_type=entry_type, limit=limit)
+
+
+@mcp.tool(
+    name="buzz.docs.get_command",
+    title="Get Buzz Command Documentation",
+    description="Return local metadata for a known high-value Buzz DLAP command.",
+    output_schema=schema(DOC_ENTRY_SCHEMA),
+)
+def docs_get_command(name: str) -> dict[str, Any]:
+    """Fetch local metadata for a known Buzz command."""
+
+    return get_command_entry(name)
+
+
+@mcp.tool(
+    name="buzz.docs.get_schema",
+    title="Get Buzz Schema Documentation",
+    description="Return local metadata for a known high-value Buzz schema.",
+    output_schema=schema(DOC_ENTRY_SCHEMA),
+)
+def docs_get_schema(name: str) -> dict[str, Any]:
+    """Fetch local metadata for a known Buzz schema."""
+
+    return get_schema_entry(name)
 
 
 @mcp.resource(

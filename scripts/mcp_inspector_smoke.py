@@ -21,6 +21,9 @@ EXPECTED_TOOLS = frozenset(
         "buzz.list_activities",
         "buzz.get_submission_report",
         "buzz.get_attachment_url",
+        "buzz.docs.search",
+        "buzz.docs.get_command",
+        "buzz.docs.get_schema",
         "get_complete_submission_report",
     }
 )

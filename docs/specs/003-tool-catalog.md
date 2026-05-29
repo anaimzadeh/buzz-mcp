@@ -2,7 +2,8 @@
 
 ## Status
 
-Draft.
+Partially implemented for the read-only submission review tools and local Buzz
+docs metadata tools.
 
 ## Naming
 
@@ -70,6 +71,48 @@ Output:
 
 - `download_url`
 - `expires_at` when known, otherwise omitted.
+
+### `buzz.docs.search`
+
+Search the local high-value Buzz documentation catalog for command, schema,
+enum, and concept metadata. This is a static, credential-free implementation
+aid; it does not scrape Buzz docs at runtime.
+
+Inputs:
+
+- `query` string, optional.
+- `entry_type` enum: `any`, `command`, `schema`, `enum`, or `concept`.
+- `limit` integer, 1 through 50.
+
+Output:
+
+- `query`
+- `count`
+- `results` array of documentation entries.
+
+### `buzz.docs.get_command`
+
+Return local metadata for a known high-value Buzz DLAP command.
+
+Inputs:
+
+- `name` string, required.
+
+Output:
+
+- Documentation entry.
+
+### `buzz.docs.get_schema`
+
+Return local metadata for a known high-value Buzz schema.
+
+Inputs:
+
+- `name` string, required.
+
+Output:
+
+- Documentation entry.
 
 ## Next Read-Only Tools
 

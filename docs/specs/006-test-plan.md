@@ -13,6 +13,7 @@ Inspector smoke, and manual live sandbox release-gate checks.
 - Extract top-level submission attachments.
 - Build authenticated URLs through a fake URL builder.
 - Redact tokens in error paths.
+- Search and resolve the local Buzz docs catalog without credentials.
 
 ## MCP Contract Tests
 

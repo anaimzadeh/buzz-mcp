@@ -116,7 +116,13 @@ The preferred tool names use the `buzz.` namespace:
 | `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
 | `buzz.get_submission_report` | Return a human-readable submission report. |
 | `buzz.get_attachment_url` | Build an authenticated URL for a known submission attachment path. |
+| `buzz.docs.search` | Search the local high-value Buzz documentation catalog. |
+| `buzz.docs.get_command` | Return local metadata for a known Buzz command. |
+| `buzz.docs.get_schema` | Return local metadata for a known Buzz schema. |
 | `get_complete_submission_report` | Backward-compatible alias for `buzz.get_submission_report`. |
+
+The `buzz.docs.*` tools are local metadata helpers and do not require Buzz
+credentials.
 
 ## Resources
 
