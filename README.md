@@ -34,6 +34,25 @@ agilix-buzz-mcp
 buzz-mcp
 ```
 
+## Docker
+
+Build a local STDIO image:
+
+```bash
+docker build -t agilix-buzz-mcp:local .
+```
+
+Run it with Buzz credentials passed through the environment:
+
+```bash
+docker run --rm -i \
+  -e BUZZ_USERNAME \
+  -e BUZZ_PASSWORD \
+  -e BUZZ_DOMAIN \
+  -e BUZZ_BASE_URL \
+  agilix-buzz-mcp:local
+```
+
 ## Test
 
 ```bash

@@ -47,6 +47,31 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(package["version"], pyproject["project"]["version"])
         self.assertEqual(package["transport"], {"type": "stdio"})
 
+    def test_dockerfile_builds_stdio_runtime_from_local_package(self) -> None:
+        dockerfile = (ROOT / "Dockerfile").read_text()
+
+        self.assertIn("FROM python:3.11-slim AS runtime", dockerfile)
+        self.assertIn("COPY pyproject.toml README.md ./", dockerfile)
+        self.assertIn("COPY src ./src", dockerfile)
+        self.assertIn("RUN pip install --no-cache-dir .", dockerfile)
+        self.assertIn('ENTRYPOINT ["agilix-buzz-mcp"]', dockerfile)
+        self.assertIn("USER 65532:65532", dockerfile)
+
+    def test_dockerignore_excludes_local_secrets_and_build_artifacts(self) -> None:
+        ignored = set((ROOT / ".dockerignore").read_text().splitlines())
+
+        for pattern in {
+            ".env",
+            ".env.*",
+            ".git/",
+            ".venv/",
+            "__pycache__/",
+            "*.egg-info/",
+            "build/",
+            "dist/",
+        }:
+            self.assertIn(pattern, ignored)
+
 
 if __name__ == "__main__":
     unittest.main()

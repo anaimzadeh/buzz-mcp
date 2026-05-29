@@ -1,0 +1,16 @@
+.claude/
+.env
+.env.*
+!.env.example
+.git/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.vscode/
+__pycache__/
+*.egg-info/
+*.py[cod]
+build/
+dist/
+tests/__pycache__/

@@ -2,7 +2,8 @@
 
 ## Status
 
-Partially implemented for local STDIO package metadata.
+Partially implemented for local STDIO package metadata and source-built Docker
+runtime.
 
 ## Package Targets
 
@@ -11,6 +12,9 @@ The official server should support:
 - Python package for local STDIO use.
 - Docker image for remote or managed deployments.
 - Versioned source release.
+
+The PoC Dockerfile builds from local source and starts the STDIO server with
+`agilix-buzz-mcp`.
 
 ## Versioning
 
