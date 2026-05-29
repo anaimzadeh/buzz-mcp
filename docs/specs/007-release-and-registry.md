@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft.
+Partially implemented for local STDIO package metadata.
 
 ## Package Targets
 
@@ -29,6 +29,15 @@ Prepare MCP Registry metadata with:
 - Installation instructions.
 - Auth requirements.
 - Support and security contact.
+
+The PoC currently uses a provisional GitHub namespace in `server.json`:
+
+```text
+io.github.anaimzadeh/agilix-buzz-mcp
+```
+
+This must be replaced with an Agilix-controlled namespace before any official
+release.
 
 ## Documentation
 

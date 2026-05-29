@@ -216,5 +216,9 @@ def troubleshoot_submission_access(enrollmentid: str, itemid: str, entityid: str
     )
 
 
-if __name__ == "__main__":
+def main() -> None:
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

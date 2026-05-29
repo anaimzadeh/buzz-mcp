@@ -1,8 +1,14 @@
 [project]
-name = "buzz-submission-mcp"
+name = "agilix-buzz-mcp"
 version = "0.1.0"
-description = "FastMCP server that turns Agilix Buzz submissions into human-readable Q&A reports."
+description = "Read-only FastMCP server proof of concept for Agilix Buzz."
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastmcp>=0.4.1",
 ]
+keywords = ["agilix", "buzz", "mcp", "fastmcp", "education"]
+
+[project.scripts]
+agilix-buzz-mcp = "buzz_submission_mcp.server:main"
+buzz-mcp = "buzz_submission_mcp.server:main"

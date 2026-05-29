@@ -1,5 +1,7 @@
 # Agilix Buzz MCP
 
+<!-- mcp-name: io.github.anaimzadeh/agilix-buzz-mcp -->
+
 FastMCP server proof of concept for an official-quality Agilix Buzz MCP.
 The current read-only surface turns Buzz student submissions into
 human-readable JSON reports — activity names resolved from item IDs, answers
@@ -22,6 +24,14 @@ export BUZZ_BASE_URL="https://api.agilixbuzz.com/"
 
 ```bash
 python -m buzz_submission_mcp.server
+```
+
+After installing the package, the same STDIO server is available as:
+
+```bash
+agilix-buzz-mcp
+# or
+buzz-mcp
 ```
 
 ## Test
