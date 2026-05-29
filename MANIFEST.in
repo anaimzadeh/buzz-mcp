@@ -1,0 +1,3 @@
+include server.json
+include scripts/mcp_inspector_smoke.py
+recursive-include docs/specs *.md

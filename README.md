@@ -60,7 +60,14 @@ PYTHONPATH=src python -m unittest discover -s tests
 ```
 
 CI runs the same skipped-by-default test suite, builds the Python package, and
-builds the Docker image on pushes to `main` and pull requests.
+builds the Docker image on pushes to `main` and pull requests. It also runs an
+MCP Inspector smoke test against the local STDIO server:
+
+```bash
+python scripts/mcp_inspector_smoke.py
+```
+
+The smoke script requires Node.js 22 or newer for the pinned Inspector CLI.
 
 Live Buzz sandbox tests are opt-in and skipped by default. To run them, set
 credentials plus a known-safe sandbox submission:

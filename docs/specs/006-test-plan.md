@@ -2,8 +2,8 @@
 
 ## Status
 
-Partially implemented for local and CI unit, contract, package, and Docker
-checks.
+Partially implemented for local and CI unit, contract, package, Docker, and MCP
+Inspector smoke checks.
 
 ## Unit Tests
 
@@ -20,6 +20,17 @@ checks.
 - Every tool returns the documented shape.
 - Resource URI parsing rejects malformed URIs.
 - Prompt templates include required arguments and safe instructions.
+
+## MCP Inspector Smoke Test
+
+CI runs the pinned official MCP Inspector CLI against the local STDIO server:
+
+```bash
+python scripts/mcp_inspector_smoke.py
+```
+
+The smoke test verifies that Inspector can initialize the server and list the
+expected tools, resource templates, and prompts without live Buzz credentials.
 
 ## Integration Tests
 
@@ -64,7 +75,7 @@ A release candidate requires:
 - All unit tests passing in CI.
 - Python package build passing in CI.
 - Docker image build passing in CI.
-- MCP Inspector smoke test passing.
+- MCP Inspector smoke test passing in CI.
 - Live sandbox test passing in a non-production Buzz tenant.
 - Changelog entry.
 - Security review of any new write operation.

@@ -73,6 +73,13 @@ class PackagingTests(unittest.TestCase):
         }:
             self.assertIn(pattern, ignored)
 
+    def test_source_distribution_manifest_includes_release_artifacts(self) -> None:
+        manifest = (ROOT / "MANIFEST.in").read_text()
+
+        self.assertIn("include server.json", manifest)
+        self.assertIn("include scripts/mcp_inspector_smoke.py", manifest)
+        self.assertIn("recursive-include docs/specs *.md", manifest)
+
     def test_ci_workflow_runs_release_gate_checks(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text()
 
@@ -81,7 +88,9 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("pull_request:", workflow)
         self.assertIn("actions/checkout@v4", workflow)
         self.assertIn("actions/setup-python@v5", workflow)
+        self.assertIn("actions/setup-node@v4", workflow)
         self.assertIn('python-version: "3.11"', workflow)
+        self.assertIn('node-version: "22"', workflow)
         self.assertIn(
             "env PYTHONPATH=src uv run python -m unittest discover -s tests",
             workflow,
@@ -89,6 +98,7 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("uv build", workflow)
         self.assertIn("actions/upload-artifact@v4", workflow)
         self.assertIn("docker build -t agilix-buzz-mcp:ci .", workflow)
+        self.assertIn("python scripts/mcp_inspector_smoke.py", workflow)
         self.assertRegex(workflow, re.compile(r"permissions:\s+contents: read", re.S))
 
 

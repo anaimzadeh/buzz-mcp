@@ -3,7 +3,7 @@
 ## Status
 
 Partially implemented for local STDIO package metadata, source-built Docker
-runtime, and CI release-gate checks.
+runtime, and CI release-gate checks including MCP Inspector smoke coverage.
 
 ## Package Targets
 
@@ -15,6 +15,9 @@ The official server should support:
 
 The PoC Dockerfile builds from local source and starts the STDIO server with
 `agilix-buzz-mcp`.
+
+The source distribution manifest includes registry metadata, spec documents,
+and the MCP Inspector smoke-test script used by the release gate.
 
 ## Versioning
 
