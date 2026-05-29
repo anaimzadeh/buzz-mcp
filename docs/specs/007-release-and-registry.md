@@ -3,7 +3,8 @@
 ## Status
 
 Partially implemented for local STDIO package metadata, source-built Docker
-runtime, and CI release-gate checks including MCP Inspector smoke coverage.
+runtime, CI release-gate checks, MCP Inspector smoke coverage, and manual live
+sandbox release validation.
 
 ## Package Targets
 

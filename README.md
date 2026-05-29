@@ -86,6 +86,26 @@ export BUZZ_TEST_ATTACHMENT_FILEPATH="MyPaper.pdf"
 PYTHONPATH=src python -m unittest tests.test_live_buzz
 ```
 
+`BUZZ_TEST_ATTACHMENT_FILEPATH` is optional and enables direct attachment URL
+contract coverage.
+
+For the release gate, configure the GitHub environment `buzz-sandbox` with
+these secrets:
+
+```text
+BUZZ_USERNAME
+BUZZ_PASSWORD
+BUZZ_DOMAIN
+BUZZ_TEST_ENTITYID
+BUZZ_TEST_ITEMID
+BUZZ_TEST_ENROLLMENTID
+```
+
+Set the environment variable `BUZZ_TEST_SANDBOX_ACK=1` to confirm that the
+target tenant and submission are safe for live validation. `BUZZ_BASE_URL` and
+`BUZZ_TEST_ATTACHMENT_FILEPATH` are optional secrets. Then run the
+`Live Buzz Sandbox` workflow manually from GitHub Actions.
+
 ## PoC Tools
 
 The preferred tool names use the `buzz.` namespace:

@@ -77,7 +77,7 @@ class PackagingTests(unittest.TestCase):
         manifest = (ROOT / "MANIFEST.in").read_text()
 
         self.assertIn("include server.json", manifest)
-        self.assertIn("include scripts/mcp_inspector_smoke.py", manifest)
+        self.assertIn("recursive-include scripts *.py", manifest)
         self.assertIn("recursive-include docs/specs *.md", manifest)
 
     def test_ci_workflow_runs_release_gate_checks(self) -> None:
@@ -99,6 +99,27 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("actions/upload-artifact@v4", workflow)
         self.assertIn("docker build -t agilix-buzz-mcp:ci .", workflow)
         self.assertIn("python scripts/mcp_inspector_smoke.py", workflow)
+        self.assertRegex(workflow, re.compile(r"permissions:\s+contents: read", re.S))
+
+    def test_live_sandbox_workflow_runs_credentialed_release_gate(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "live-sandbox.yml").read_text()
+
+        self.assertIn("name: Live Buzz Sandbox", workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("environment: buzz-sandbox", workflow)
+        self.assertIn('BUZZ_RUN_LIVE_TESTS: "1"', workflow)
+        self.assertIn("BUZZ_USERNAME: ${{ secrets.BUZZ_USERNAME }}", workflow)
+        self.assertIn("BUZZ_PASSWORD: ${{ secrets.BUZZ_PASSWORD }}", workflow)
+        self.assertIn("BUZZ_TEST_ENTITYID: ${{ secrets.BUZZ_TEST_ENTITYID }}", workflow)
+        self.assertIn(
+            "BUZZ_TEST_SANDBOX_ACK: ${{ vars.BUZZ_TEST_SANDBOX_ACK }}",
+            workflow,
+        )
+        self.assertIn("python scripts/check_live_buzz_env.py", workflow)
+        self.assertIn(
+            "env PYTHONPATH=src uv run python -m unittest tests.test_live_buzz",
+            workflow,
+        )
         self.assertRegex(workflow, re.compile(r"permissions:\s+contents: read", re.S))
 
 

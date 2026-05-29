@@ -8,7 +8,8 @@ Draft.
 
 ### Local STDIO
 
-Local STDIO servers read Buzz credentials from environment variables:
+Local STDIO servers and the live sandbox release-gate workflow read Buzz
+credentials from environment variables:
 
 - `BUZZ_USERNAME`
 - `BUZZ_PASSWORD`
@@ -16,6 +17,9 @@ Local STDIO servers read Buzz credentials from environment variables:
 - `BUZZ_BASE_URL` optional, defaulting to `https://api.agilixbuzz.com`
 
 This mode is suitable for local clients and development.
+
+The CI live sandbox workflow must run in the protected `buzz-sandbox`
+environment and requires `BUZZ_TEST_SANDBOX_ACK=1` before it calls Buzz.
 
 ### Remote HTTP
 

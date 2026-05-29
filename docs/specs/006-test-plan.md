@@ -2,8 +2,8 @@
 
 ## Status
 
-Partially implemented for local and CI unit, contract, package, Docker, and MCP
-Inspector smoke checks.
+Partially implemented for local and CI unit, contract, package, Docker, MCP
+Inspector smoke, and manual live sandbox release-gate checks.
 
 ## Unit Tests
 
@@ -61,6 +61,11 @@ PYTHONPATH=src python -m unittest tests.test_live_buzz
 `BUZZ_TEST_ATTACHMENT_FILEPATH` is optional and enables direct attachment URL
 contract coverage.
 
+For release validation, the `Live Buzz Sandbox` GitHub Actions workflow runs the
+same live tests manually against the protected `buzz-sandbox` environment. The
+workflow requires the same Buzz secrets and `BUZZ_TEST_SANDBOX_ACK=1`, which
+confirms that the target tenant and submission are safe for live validation.
+
 ## Security Tests
 
 - No secrets in exception strings.
@@ -76,6 +81,6 @@ A release candidate requires:
 - Python package build passing in CI.
 - Docker image build passing in CI.
 - MCP Inspector smoke test passing in CI.
-- Live sandbox test passing in a non-production Buzz tenant.
+- Manual `Live Buzz Sandbox` workflow passing in a non-production Buzz tenant.
 - Changelog entry.
 - Security review of any new write operation.
