@@ -208,6 +208,14 @@ DOC_ENTRIES: tuple[BuzzDocEntry, ...] = (
         phase="core entity graph",
     ),
     _command(
+        "GetUser2",
+        category="Users",
+        summary="Fetch a current user record; omit optional PII-heavy select expansions by default.",
+        related=("User", "ListUsers", "Enrollment"),
+        sensitive=True,
+        phase="core entity graph",
+    ),
+    _command(
         "GetEnrollment3",
         category="Enrollments",
         summary="Fetch a current enrollment record joining a user to an entity.",

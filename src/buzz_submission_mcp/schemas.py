@@ -80,6 +80,21 @@ COURSE_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+USER_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "id": STRING,
+        "display_name": STRING,
+        "reference": STRING,
+        "domainid": STRING,
+        "guid": STRING,
+        "version": STRING,
+        "pii_redacted": {"type": "boolean"},
+    },
+    "required": ["id", "display_name", "reference", "pii_redacted"],
+    "additionalProperties": False,
+}
+
 ENROLLMENT_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {

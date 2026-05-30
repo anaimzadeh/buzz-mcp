@@ -52,6 +52,14 @@ buzz://enrollment/{enrollmentid}
 
 Returns normalized `Enrollment` JSON.
 
+### User
+
+```text
+buzz://user/{userid}
+```
+
+Returns privacy-redacted normalized `User` JSON.
+
 ### User Enrollments
 
 ```text
@@ -80,5 +88,4 @@ Returns the same normalized JSON contract as `buzz.list_entity_enrollments`.
 ```text
 buzz://enrollment/{enrollmentid}/gradebook
 buzz://submission/{enrollmentid}/{itemid}
-buzz://user/{userid}
 ```

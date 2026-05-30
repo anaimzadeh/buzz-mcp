@@ -21,6 +21,20 @@ def extract_course(course_xml: str) -> dict[str, Any]:
     return course_to_dict(course)
 
 
+def extract_user(user_xml: str) -> dict[str, Any]:
+    """Normalize a GetUser2 response into the MCP User contract."""
+
+    root = parse_xml(user_xml, "GetUser2 payload")
+    user = _find_first(root, "user")
+    if user is None:
+        raise BuzzApiError(
+            "Response did not include a <user> element.",
+            code="NOT_FOUND",
+            details={"parser": "extract_user"},
+        )
+    return user_to_dict(user)
+
+
 def extract_enrollment(enrollment_xml: str) -> dict[str, Any]:
     """Normalize a GetEnrollment3 response into the MCP Enrollment contract."""
 
@@ -79,6 +93,27 @@ def course_to_dict(course: ET.Element) -> dict[str, Any]:
         "days": _attr(course, "days"),
         "term": _attr(course, "term"),
         "version": _attr(course, "version"),
+    }
+
+
+def user_to_dict(user: ET.Element) -> dict[str, Any]:
+    userid = _attr(user, "id", "userid")
+    display_name = _display_name(user)
+    if not userid:
+        raise BuzzApiError(
+            "User response missing required field: id",
+            code="BUZZ_API_ERROR",
+            details={"parser": "user_to_dict", "missing": ["id"]},
+        )
+
+    return {
+        "id": userid,
+        "display_name": display_name or userid,
+        "reference": _attr(user, "reference"),
+        "domainid": _attr(user, "domainid"),
+        "guid": _attr(user, "guid"),
+        "version": _attr(user, "version"),
+        "pii_redacted": True,
     }
 
 
@@ -142,3 +177,10 @@ def _attr(element: ET.Element, *names: str) -> str:
         if value:
             return value
     return ""
+
+
+def _display_name(user: ET.Element) -> str:
+    first = _attr(user, "firstname")
+    last = _attr(user, "lastname")
+    full_name = " ".join(part for part in (first, last) if part).strip()
+    return full_name or _attr(user, "username", "reference")

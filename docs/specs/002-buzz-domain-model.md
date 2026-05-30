@@ -31,6 +31,17 @@ Required fields:
 - `display_name`
 - `reference`
 
+Implemented optional fields:
+
+- `domainid`
+- `guid`
+- `version`
+- `pii_redacted`
+
+The normalized user contract intentionally omits email, username, login dates,
+password-change dates, free-form data, security configuration, and session data
+by default.
+
 ### Course
 
 Represents a course or course-like entity.

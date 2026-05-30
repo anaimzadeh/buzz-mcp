@@ -170,6 +170,10 @@ class BuzzClient:
             params["version"] = version
         return self._get_text("GetCourse2", params)
 
+    def get_user(self, *, userid: str) -> str:
+        params = {"cmd": "getuser2", "userid": userid}
+        return self._get_text("GetUser2", params)
+
     def get_enrollment(self, *, enrollmentid: str) -> str:
         params = {"cmd": "getenrollment3", "enrollmentid": enrollmentid}
         return self._get_text("GetEnrollment3", params)

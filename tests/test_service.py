@@ -71,6 +71,20 @@ COURSE_XML = """
 </response>
 """
 
+USER_XML = """
+<response code="OK">
+  <user
+    id="9001"
+    firstname="Sally"
+    lastname="Johnson"
+    domainid="100"
+    reference="student-ref"
+    guid="user-guid"
+    email="sally.johnson@example.edu"
+    version="7" />
+</response>
+"""
+
 ENROLLMENT_XML = """
 <response code="OK">
   <enrollment
@@ -134,6 +148,10 @@ class FakeClient:
     def get_course(self, *, courseid: str, version: str | None = None) -> str:
         self.calls.append(f"get_course:{courseid}:{version}")
         return COURSE_XML
+
+    def get_user(self, *, userid: str) -> str:
+        self.calls.append(f"get_user:{userid}")
+        return USER_XML
 
     def get_enrollment(self, *, enrollmentid: str) -> str:
         self.calls.append(f"get_enrollment:{enrollmentid}")
@@ -258,6 +276,20 @@ class BuzzReadServiceTests(unittest.TestCase):
         self.assertEqual(course["title"], "Algebra I")
         self.assertEqual(course["type"], "Course")
         self.assertIn("get_course:4378:12", client.calls)
+
+    def test_get_user_returns_privacy_redacted_user(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        user = service.get_user(userid="9001")
+
+        self.assertTrue(client.closed)
+        self.assertEqual(user["id"], "9001")
+        self.assertEqual(user["display_name"], "Sally Johnson")
+        self.assertEqual(user["reference"], "student-ref")
+        self.assertTrue(user["pii_redacted"])
+        self.assertNotIn("email", user)
+        self.assertIn("get_user:9001", client.calls)
 
     def test_get_enrollment_returns_normalized_enrollment(self) -> None:
         client = FakeClient()

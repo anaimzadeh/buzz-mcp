@@ -77,6 +77,19 @@ class LiveBuzzSandboxTests(unittest.TestCase):
         self.assertIsInstance(enrollment["userid"], str)
         self.assertIn("status", enrollment)
 
+    @unittest.skipUnless(
+        os.getenv("BUZZ_TEST_USERID"),
+        "BUZZ_TEST_USERID not set",
+    )
+    def test_live_get_user_contract(self) -> None:
+        user = self.service.get_user(userid=os.environ["BUZZ_TEST_USERID"])
+
+        self.assertEqual(user["id"], os.environ["BUZZ_TEST_USERID"])
+        self.assertIsInstance(user["display_name"], str)
+        self.assertIn("reference", user)
+        self.assertTrue(user["pii_redacted"])
+        self.assertNotIn("email", user)
+
     def test_live_get_submission_report_contract(self) -> None:
         report = self.service.get_submission_report(
             enrollmentid=self.enrollmentid,

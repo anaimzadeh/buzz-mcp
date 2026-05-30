@@ -7,6 +7,7 @@ from buzz_submission_mcp.entities import (
     extract_course,
     extract_enrollment,
     extract_enrollments,
+    extract_user,
 )
 
 
@@ -47,6 +48,23 @@ ENROLLMENT_XML = """
 </response>
 """
 
+USER_XML = """
+<response code="OK">
+  <user
+    id="9001"
+    firstname="Sally"
+    lastname="Johnson"
+    domainid="100"
+    reference="student-ref"
+    guid="user-guid"
+    username="sally.johnson"
+    email="sally.johnson@example.edu"
+    lastpasswordchangeddate="2025-01-01T00:00:00Z"
+    lastlogindate="2025-09-01T12:00:00Z"
+    version="7" />
+</response>
+"""
+
 ENROLLMENTS_XML = """
 <response code="OK">
   <enrollments>
@@ -66,6 +84,26 @@ class EntityParserTests(unittest.TestCase):
         self.assertEqual(course["type"], "Course")
         self.assertEqual(course["reference"], "ALG-1")
         self.assertEqual(course["start_date"], "2025-08-01T00:00:00Z")
+
+    def test_extract_user_returns_privacy_redacted_contract(self) -> None:
+        user = extract_user(USER_XML)
+
+        self.assertEqual(user["id"], "9001")
+        self.assertEqual(user["display_name"], "Sally Johnson")
+        self.assertEqual(user["reference"], "student-ref")
+        self.assertEqual(user["domainid"], "100")
+        self.assertEqual(user["version"], "7")
+        self.assertTrue(user["pii_redacted"])
+        self.assertNotIn("email", user)
+        self.assertNotIn("lastlogindate", user)
+
+    def test_extract_user_falls_back_for_display_name(self) -> None:
+        user = extract_user(
+            '<response code="OK"><user id="9001" username="sjohnson" /></response>'
+        )
+
+        self.assertEqual(user["display_name"], "sjohnson")
+        self.assertEqual(user["reference"], "")
 
     def test_extract_enrollment_returns_stable_contract(self) -> None:
         enrollment = extract_enrollment(ENROLLMENT_XML)

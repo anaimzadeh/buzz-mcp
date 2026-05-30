@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import Any, Callable, Literal, Protocol
 
 from .buzz_client import BuzzApiError, BuzzClient
-from .entities import extract_course, extract_enrollment, extract_enrollments
+from .entities import (
+    extract_course,
+    extract_enrollment,
+    extract_enrollments,
+    extract_user,
+)
 from .reporting import (
     ItemInfo,
     SubmissionRequest,
@@ -23,6 +28,7 @@ class BuzzReadClient(Protocol):
     def get_item(self, *, entityid: str, itemid: str) -> str: ...
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str: ...
     def get_course(self, *, courseid: str, version: str | None = None) -> str: ...
+    def get_user(self, *, userid: str) -> str: ...
     def get_enrollment(self, *, enrollmentid: str) -> str: ...
     def list_user_enrollments(
         self,
@@ -99,6 +105,14 @@ class BuzzReadService:
         try:
             course_xml = client.get_course(courseid=courseid, version=version)
             return extract_course(course_xml)
+        finally:
+            client.close()
+
+    def get_user(self, *, userid: str) -> dict[str, Any]:
+        client = self._client_factory()
+        try:
+            user_xml = client.get_user(userid=userid)
+            return extract_user(user_xml)
         finally:
             client.close()
 

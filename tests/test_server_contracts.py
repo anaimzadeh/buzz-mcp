@@ -43,6 +43,16 @@ COURSE = {
     "version": "12",
 }
 
+USER = {
+    "id": "9001",
+    "display_name": "Sally Johnson",
+    "reference": "student-ref",
+    "domainid": "100",
+    "guid": "user-guid",
+    "version": "7",
+    "pii_redacted": True,
+}
+
 ENROLLMENT = {
     "enrollmentid": "4317",
     "entityid": "4378",
@@ -106,6 +116,11 @@ class FakeService:
             course["version"] = version
         return course
 
+    def get_user(self, *, userid: str) -> dict[str, object]:
+        user = dict(USER)
+        user["id"] = userid
+        return user
+
     def get_enrollment(self, *, enrollmentid: str) -> dict[str, object]:
         enrollment = dict(ENROLLMENT)
         enrollment["enrollmentid"] = enrollmentid
@@ -144,6 +159,7 @@ class ServerContractTests(unittest.TestCase):
             "buzz.get_activity",
             "buzz.list_activities",
             "buzz.get_course",
+            "buzz.get_user",
             "buzz.get_enrollment",
             "buzz.list_user_enrollments",
             "buzz.list_entity_enrollments",
@@ -175,6 +191,7 @@ class ServerContractTests(unittest.TestCase):
         self.assertIn("buzz://course/{entityid}/item/{itemid}", templates)
         self.assertIn("buzz://course/{entityid}/manifest", templates)
         self.assertIn("buzz://course/{entityid}", templates)
+        self.assertIn("buzz://user/{userid}", templates)
         self.assertIn("buzz://enrollment/{enrollmentid}", templates)
         self.assertIn("buzz://user/{userid}/enrollments", templates)
         self.assertIn("buzz://course/{entityid}/enrollments", templates)
@@ -231,6 +248,21 @@ class ServerContractTests(unittest.TestCase):
         self.assertEqual(course["entityid"], "4378")
         self.assertEqual(course["title"], "Algebra I")
         self.assertEqual(course["version"], "12")
+
+    def test_mcp_tool_call_returns_privacy_redacted_user(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.get_user",
+                    {"userid": "9001"},
+                )
+            return result.structured_content
+
+        user = asyncio.run(run())
+
+        self.assertEqual(user["id"], "9001")
+        self.assertEqual(user["display_name"], "Sally Johnson")
+        self.assertTrue(user["pii_redacted"])
 
     def test_mcp_tool_call_returns_structured_entity_enrollments(self) -> None:
         async def run() -> dict[str, object]:
@@ -290,6 +322,17 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertEqual(course["entityid"], "4378")
         self.assertEqual(course["title"], "Algebra I")
+
+    def test_user_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource("buzz://user/9001")
+            return json.loads(result.contents[0].content)
+
+        user = asyncio.run(run())
+
+        self.assertEqual(user["id"], "9001")
+        self.assertTrue(user["pii_redacted"])
 
     def test_course_enrollments_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

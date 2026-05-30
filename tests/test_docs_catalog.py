@@ -25,6 +25,19 @@ class DocsCatalogTests(unittest.TestCase):
         self.assertIn("ListQuestions", commands)
         self.assertIn("GetAttemptFile", commands)
 
+    def test_catalog_contains_core_entity_graph_commands(self) -> None:
+        commands = {
+            entry.name
+            for entry in DOC_ENTRIES
+            if entry.entry_type == "command" and entry.mcp_phase == "core entity graph"
+        }
+
+        self.assertIn("GetCourse2", commands)
+        self.assertIn("GetUser2", commands)
+        self.assertIn("GetEnrollment3", commands)
+        self.assertIn("ListUserEnrollments", commands)
+        self.assertIn("ListEntityEnrollments", commands)
+
     def test_search_docs_finds_relevant_command_without_credentials(self) -> None:
         results = search_docs(query="student submission", entry_type="command", limit=5)
 

@@ -194,6 +194,7 @@ The current server exposes a narrow, read-only slice:
 | MCP concept | Tool/resource | Buzz commands |
 | --- | --- | --- |
 | `Course` | `buzz.get_course`, course resource | `GetCourse2` |
+| `User` | `buzz.get_user`, user resource | `GetUser2` |
 | `Enrollment` | `buzz.get_enrollment`, `buzz.list_user_enrollments`, `buzz.list_entity_enrollments`, enrollment resources | `GetEnrollment3`, `ListUserEnrollments`, `ListEntityEnrollments` |
 | `ActivityItem` | `buzz.get_activity`, `buzz.list_activities`, course item resources | `GetItem`, `GetItemList` |
 | `Submission` report | `buzz.get_submission_report`, submission report resource | `GetStudentSubmission`, `GetItem`, `GetItemList`, `ListQuestions`, obsolete fallback `GetQuestionList` |
@@ -206,9 +207,8 @@ This maps to the documentation ontology as:
 - `Course` -> `Manifest` -> `Item` is partially implemented.
 - `Enrollment` -> `Submission` -> `Question`/`Attachment` is partially
   implemented.
-- `Course` and `Enrollment` are first-class MCP outputs.
-- `User` and `Gradebook` are specified in local docs but not yet first-class
-  MCP outputs.
+- `Course`, `User`, and `Enrollment` are first-class MCP outputs.
+- `Gradebook` is specified in local docs but not yet a first-class MCP output.
 
 ## Recommended MCP Build Sequence
 
@@ -243,7 +243,7 @@ large gradebook or collaboration surfaces.
 | --- | --- | --- | --- |
 | `buzz.get_course` | `GetCourse2` | `Course` | Implemented. |
 | `buzz.list_courses` | `ListCourses` | `Course[]` | Add filtering and limit arguments. |
-| `buzz.get_user` | `GetUser2` | `User` | Redact/omit unnecessary PII by default. |
+| `buzz.get_user` | `GetUser2` | `User` | Implemented with default response only and PII-heavy fields omitted. |
 | `buzz.get_enrollment` | `GetEnrollment3` | `Enrollment` | Implemented without joined user/entity expansion. |
 | `buzz.list_user_enrollments` | `ListUserEnrollments` | `Enrollment[]` | Implemented with service-side limit. |
 | `buzz.list_entity_enrollments` | `ListEntityEnrollments` | `Enrollment[]` | Implemented with service-side limit; privacy-sensitive. |

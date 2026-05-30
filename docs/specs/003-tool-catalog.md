@@ -81,6 +81,20 @@ Output:
 
 - `Enrollment`.
 
+### `buzz.get_user`
+
+Fetch privacy-redacted metadata for a Buzz user. The tool uses the default
+`GetUser2` response and does not request optional `data`, `securityconfig`,
+`session`, or `history` expansions.
+
+Inputs:
+
+- `userid` string, required.
+
+Output:
+
+- `User`.
+
 ### `buzz.list_user_enrollments`
 
 Fetch normalized enrollment records for a Buzz user.
@@ -181,7 +195,6 @@ Output:
 ## Next Read-Only Tools
 
 - `buzz.list_courses`
-- `buzz.get_user`
 - `buzz.get_gradebook`
 - `buzz.get_submission_state`
 - `buzz.search_course_content`

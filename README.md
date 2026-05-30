@@ -82,12 +82,14 @@ export BUZZ_TEST_ITEMID="assign12"
 export BUZZ_TEST_ENROLLMENTID="4317"
 # Optional: validates direct submission attachment URL generation.
 export BUZZ_TEST_ATTACHMENT_FILEPATH="MyPaper.pdf"
+# Optional: validates privacy-redacted user metadata if caller has ReadUser rights.
+export BUZZ_TEST_USERID="9001"
 
 PYTHONPATH=src python -m unittest tests.test_live_buzz
 ```
 
-`BUZZ_TEST_ATTACHMENT_FILEPATH` is optional and enables direct attachment URL
-contract coverage.
+`BUZZ_TEST_ATTACHMENT_FILEPATH` and `BUZZ_TEST_USERID` are optional and enable
+direct attachment URL and user metadata contract coverage.
 
 For the release gate, configure the GitHub environment `buzz-sandbox` with
 these secrets:
@@ -115,6 +117,7 @@ The preferred tool names use the `buzz.` namespace:
 | `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
 | `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
 | `buzz.get_course` | Return normalized metadata for a Buzz course or course-like entity. |
+| `buzz.get_user` | Return privacy-redacted metadata for a Buzz user. |
 | `buzz.get_enrollment` | Return a normalized Buzz enrollment record. |
 | `buzz.list_user_enrollments` | Return normalized enrollment records for a user. |
 | `buzz.list_entity_enrollments` | Return normalized enrollment records for a course/entity. |
@@ -136,6 +139,7 @@ The PoC exposes read-only resource templates:
 buzz://course/{entityid}/manifest
 buzz://course/{entityid}/item/{itemid}
 buzz://course/{entityid}
+buzz://user/{userid}
 buzz://enrollment/{enrollmentid}
 buzz://user/{userid}/enrollments
 buzz://course/{entityid}/enrollments
@@ -231,6 +235,7 @@ It returns:
 | Need | Buzz command |
 | --- | --- |
 | Resolve course metadata | `GetCourse2` |
+| Resolve privacy-redacted user metadata | `GetUser2` |
 | Resolve one enrollment | `GetEnrollment3` |
 | List a user's enrollments | `ListUserEnrollments` |
 | List a course/entity roster | `ListEntityEnrollments` |

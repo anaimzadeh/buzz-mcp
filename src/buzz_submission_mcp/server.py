@@ -19,6 +19,7 @@ from .schemas import (
     ENROLLMENT_LIST_SCHEMA,
     ENROLLMENT_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
+    USER_SCHEMA,
     schema,
 )
 from .service import BuzzReadService
@@ -64,6 +65,18 @@ def get_course(courseid: str, version: str | None = None) -> dict[str, Any]:
     """Fetch normalized metadata for a Buzz course."""
 
     return _service().get_course(courseid=courseid, version=version)
+
+
+@mcp.tool(
+    name="buzz.get_user",
+    title="Get Buzz User",
+    description="Fetch privacy-redacted metadata for a Buzz user.",
+    output_schema=schema(USER_SCHEMA),
+)
+def get_user(userid: str) -> dict[str, Any]:
+    """Fetch privacy-redacted metadata for a Buzz user."""
+
+    return _service().get_user(userid=userid)
 
 
 @mcp.tool(
@@ -278,6 +291,17 @@ def course_manifest_resource(entityid: str) -> dict[str, Any]:
 )
 def course_resource(entityid: str) -> dict[str, Any]:
     return get_course(courseid=entityid)
+
+
+@mcp.resource(
+    "buzz://user/{userid}",
+    name="buzz.user",
+    title="Buzz User",
+    description="Privacy-redacted metadata for a Buzz user.",
+    mime_type="application/json",
+)
+def user_resource(userid: str) -> dict[str, Any]:
+    return get_user(userid=userid)
 
 
 @mcp.resource(
