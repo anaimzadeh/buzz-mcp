@@ -154,8 +154,16 @@ class BuzzClient:
         }
         return self._get_text("GetStudentSubmission", params)
 
-    def get_item(self, *, entityid: str, itemid: str) -> str:
-        params = {"cmd": "getitem", "entityid": entityid, "itemid": itemid}
+    def get_item(
+        self, *, entityid: str, itemid: str, version: str | None = None
+    ) -> str:
+        params: dict[str, Any] = {
+            "cmd": "getitem",
+            "entityid": entityid,
+            "itemid": itemid,
+        }
+        if version:
+            params["version"] = version
         return self._get_text("GetItem", params)
 
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str:

@@ -19,6 +19,7 @@ from .schemas import (
     DOC_SEARCH_SCHEMA,
     ENROLLMENT_LIST_SCHEMA,
     ENROLLMENT_SCHEMA,
+    ITEM_SCHEMA,
     MANIFEST_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
     USER_SCHEMA,
@@ -43,6 +44,22 @@ def get_activity(entityid: str, itemid: str) -> dict[str, Any]:
     """Fetch normalized metadata for a Buzz course activity."""
 
     return _service().get_activity(entityid=entityid, itemid=itemid)
+
+
+@mcp.tool(
+    name="buzz.get_item",
+    title="Get Buzz Item",
+    description="Fetch normalized metadata for a Buzz course content item.",
+    output_schema=schema(ITEM_SCHEMA),
+)
+def get_item(
+    entityid: str,
+    itemid: str,
+    version: str | None = None,
+) -> dict[str, Any]:
+    """Fetch normalized metadata for a Buzz course content item."""
+
+    return _service().get_item(entityid=entityid, itemid=itemid, version=version)
 
 
 @mcp.tool(
@@ -306,12 +323,12 @@ def docs_get_schema(name: str) -> dict[str, Any]:
 @mcp.resource(
     "buzz://course/{entityid}/item/{itemid}",
     name="buzz.activity",
-    title="Buzz Activity",
-    description="Normalized metadata for a Buzz activity item.",
+    title="Buzz Item",
+    description="Normalized metadata for a Buzz course content item.",
     mime_type="application/json",
 )
 def activity_resource(entityid: str, itemid: str) -> dict[str, Any]:
-    return get_activity(entityid=entityid, itemid=itemid)
+    return get_item(entityid=entityid, itemid=itemid)
 
 
 @mcp.resource(

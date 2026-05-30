@@ -18,6 +18,7 @@ DEFAULT_SERVER_ARGS = "-m buzz_submission_mcp.server"
 EXPECTED_TOOLS = frozenset(
     {
         "buzz.get_activity",
+        "buzz.get_item",
         "buzz.list_activities",
         "buzz.get_manifest",
         "buzz.get_course",

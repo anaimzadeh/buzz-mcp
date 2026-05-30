@@ -25,7 +25,7 @@ Returns the same normalized JSON contract as `buzz.get_submission_report`.
 buzz://course/{entityid}/item/{itemid}
 ```
 
-Returns normalized `ActivityItem` JSON.
+Returns normalized `Item` JSON.
 
 ### Course Manifest
 

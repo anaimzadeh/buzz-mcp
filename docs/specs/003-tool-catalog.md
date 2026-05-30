@@ -27,6 +27,22 @@ Output:
 
 - `ActivityItem`.
 
+### `buzz.get_item`
+
+Fetch richer normalized metadata for a single course content item. This returns
+stable navigation, resource, grading, and dropbox fields without returning raw
+free-form item data or item content payloads.
+
+Inputs:
+
+- `entityid` string, required.
+- `itemid` string, required.
+- `version` string, optional.
+
+Output:
+
+- `Item`.
+
 ### `buzz.list_activities`
 
 Fetch normalized metadata for every visible activity item in a course.

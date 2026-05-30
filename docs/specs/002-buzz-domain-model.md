@@ -2,7 +2,7 @@
 
 ## Status
 
-Partially implemented for `Course`, `Enrollment`, `ActivityItem`,
+Partially implemented for `Course`, `Enrollment`, `ActivityItem`, `Item`,
 `Submission`, and `Attachment` read contracts.
 
 ## Principle
@@ -107,6 +107,42 @@ Required fields:
 - `dropbox_multiple`
 - `perfect_score`
 - `due_date`
+
+### Item
+
+Represents a richer normalized course content item read from Buzz item data.
+
+Required fields:
+
+- `entityid`
+- `id`
+- `title`
+- `type`
+- `parentid`
+- `sequence`
+- `abbreviation`
+- `href`
+- `folder`
+- `category`
+- `period`
+- `resourceentityid`
+- `creation_date`
+- `modified_date`
+- `version`
+- `origin_depth`
+- `derivative_depth`
+- `due_date`
+- `available_date`
+- `gradable`
+- `allow_late_submission`
+- `perfect_score`
+- `weight`
+- `accepts_file_upload`
+- `allowed_filetypes`
+- `dropbox_multiple`
+
+The normalized item contract intentionally excludes raw free-form item data,
+assessment question definitions, passwords, and embedded content payloads.
 
 ### Manifest
 

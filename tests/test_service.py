@@ -20,12 +20,26 @@ SUBMISSION_XML = """
 
 ITEM_XML = """
 <response code="OK">
-  <item id="assign12">
+  <item
+      id="assign12"
+      resourceentityid="4378"
+      creationdate="2025-08-01T00:00:00Z"
+      modifieddate="2025-08-15T00:00:00Z"
+      version="7">
     <data>
       <type>Assignment</type>
+      <parent>DEFAULT</parent>
+      <sequence>a</sequence>
       <title>Assignment 12</title>
       <abbreviation>A12</abbreviation>
+      <href>Assets/assignment12.htm</href>
+      <folder>ASSIGN12</folder>
+      <category>4</category>
+      <period>0</period>
+      <allowlatesubmission>true</allowlatesubmission>
+      <gradable>true</gradable>
       <perfectscore>10</perfectscore>
+      <weight>50</weight>
       <duedate>2025-09-01T23:59:00Z</duedate>
       <dropbox2 type="2" multiple="true" filetypes=".pdf" />
     </data>
@@ -167,8 +181,10 @@ class FakeClient:
         self.calls.append(f"get_student_submission:{enrollmentid}:{itemid}")
         return SUBMISSION_XML
 
-    def get_item(self, *, entityid: str, itemid: str) -> str:
-        self.calls.append(f"get_item:{entityid}:{itemid}")
+    def get_item(
+        self, *, entityid: str, itemid: str, version: str | None = None
+    ) -> str:
+        self.calls.append(f"get_item:{entityid}:{itemid}:{version}")
         if self.fail_get_item:
             raise BuzzApiError("GetItem failed")
         return ITEM_XML
@@ -284,8 +300,10 @@ class BuzzReadServiceTests(unittest.TestCase):
 
     def test_get_activity_does_not_fallback_on_auth_error(self) -> None:
         class AuthFailClient(FakeClient):
-            def get_item(self, *, entityid: str, itemid: str) -> str:
-                self.calls.append(f"get_item:{entityid}:{itemid}")
+            def get_item(
+                self, *, entityid: str, itemid: str, version: str | None = None
+            ) -> str:
+                self.calls.append(f"get_item:{entityid}:{itemid}:{version}")
                 raise BuzzApiError("auth failed", code="AUTH_REQUIRED")
 
         client = AuthFailClient()
@@ -296,6 +314,33 @@ class BuzzReadServiceTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "AUTH_REQUIRED")
         self.assertNotIn("get_item_list:4378:assign12", client.calls)
+
+    def test_get_item_returns_rich_normalized_item_contract(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        item = service.get_item(entityid="4378", itemid="assign12", version="7")
+
+        self.assertTrue(client.closed)
+        self.assertEqual(item["entityid"], "4378")
+        self.assertEqual(item["id"], "assign12")
+        self.assertEqual(item["title"], "Assignment 12")
+        self.assertEqual(item["type"], "Assignment")
+        self.assertEqual(item["parentid"], "DEFAULT")
+        self.assertEqual(item["href"], "Assets/assignment12.htm")
+        self.assertEqual(item["folder"], "ASSIGN12")
+        self.assertEqual(item["category"], "4")
+        self.assertEqual(item["period"], "0")
+        self.assertEqual(item["resourceentityid"], "4378")
+        self.assertEqual(item["version"], "7")
+        self.assertTrue(item["gradable"])
+        self.assertTrue(item["allow_late_submission"])
+        self.assertEqual(item["perfect_score"], "10")
+        self.assertEqual(item["weight"], "50")
+        self.assertTrue(item["accepts_file_upload"])
+        self.assertEqual(item["allowed_filetypes"], ".pdf")
+        self.assertTrue(item["dropbox_multiple"])
+        self.assertIn("get_item:4378:assign12:7", client.calls)
 
     def test_list_activities_returns_normalized_manifest(self) -> None:
         client = FakeClient()

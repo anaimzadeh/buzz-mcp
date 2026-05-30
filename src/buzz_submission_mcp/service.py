@@ -10,6 +10,7 @@ from .entities import (
     extract_enrollments,
     extract_user,
 )
+from .items import extract_item_summary
 from .manifest import extract_manifest_summary
 from .reporting import (
     ItemInfo,
@@ -27,7 +28,9 @@ class BuzzReadClient(Protocol):
 
     def close(self) -> None: ...
     def get_student_submission(self, *, enrollmentid: str, itemid: str) -> str: ...
-    def get_item(self, *, entityid: str, itemid: str) -> str: ...
+    def get_item(
+        self, *, entityid: str, itemid: str, version: str | None = None
+    ) -> str: ...
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str: ...
     def get_manifest(self, *, entityid: str) -> str: ...
     def get_course(self, *, courseid: str, version: str | None = None) -> str: ...
@@ -91,6 +94,25 @@ class BuzzReadService:
         try:
             item_xml = self._get_item_xml(client, entityid=entityid, itemid=itemid)
             return activity_to_dict(extract_item_info(item_xml), entityid=entityid)
+        finally:
+            client.close()
+
+    def get_item(
+        self, *, entityid: str, itemid: str, version: str | None = None
+    ) -> dict[str, Any]:
+        client = self._client_factory()
+        try:
+            item_xml = self._get_item_xml(
+                client,
+                entityid=entityid,
+                itemid=itemid,
+                version=version,
+            )
+            return extract_item_summary(
+                item_xml,
+                entityid=entityid,
+                requested_itemid=itemid,
+            )
         finally:
             client.close()
 
@@ -326,16 +348,23 @@ class BuzzReadService:
         return payload
 
     def _get_item_xml(
-        self, client: BuzzReadClient, *, entityid: str, itemid: str
+        self,
+        client: BuzzReadClient,
+        *,
+        entityid: str,
+        itemid: str,
+        version: str | None = None,
     ) -> str:
         try:
-            return client.get_item(entityid=entityid, itemid=itemid)
+            return client.get_item(entityid=entityid, itemid=itemid, version=version)
         except BuzzApiError as exc:
             if exc.code in {
                 "AUTH_REQUIRED",
                 "INSUFFICIENT_BUZZ_RIGHTS",
                 "RATE_LIMITED",
             }:
+                raise
+            if version is not None:
                 raise
             return client.get_item_list(entityid=entityid, itemid=itemid)
 

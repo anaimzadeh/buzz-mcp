@@ -119,6 +119,7 @@ The preferred tool names use the `buzz.` namespace:
 | Tool | Purpose |
 | --- | --- |
 | `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
+| `buzz.get_item` | Return richer normalized metadata for a Buzz course content item. |
 | `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
 | `buzz.get_manifest` | Return a bounded, depth-first summary of a Buzz course content manifest. |
 | `buzz.get_course` | Return normalized metadata for a Buzz course or course-like entity. |
@@ -243,6 +244,7 @@ It returns:
 | Need | Buzz command |
 | --- | --- |
 | Summarize a course content tree | `GetManifest` |
+| Resolve one course content item | `GetItem` |
 | Resolve course metadata | `GetCourse2` |
 | List courses in an explicit domain | `ListCourses` |
 | Resolve privacy-redacted user metadata | `GetUser2` |

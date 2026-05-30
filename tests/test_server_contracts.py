@@ -21,6 +21,26 @@ ACTIVITY = {
     "due_date": "2025-09-01T23:59:00Z",
 }
 
+ITEM = {
+    **ACTIVITY,
+    "parentid": "DEFAULT",
+    "sequence": "a",
+    "href": "Assets/assignment12.htm",
+    "folder": "ASSIGN12",
+    "category": "4",
+    "period": "0",
+    "resourceentityid": "4378",
+    "creation_date": "2025-08-01T00:00:00Z",
+    "modified_date": "2025-08-15T00:00:00Z",
+    "version": "7",
+    "origin_depth": "",
+    "derivative_depth": "",
+    "available_date": "",
+    "gradable": True,
+    "allow_late_submission": True,
+    "weight": "50",
+}
+
 REPORT = {
     "activity_title": "Assignment 12",
     "activity": {key: value for key, value in ACTIVITY.items() if key != "entityid"},
@@ -122,6 +142,16 @@ class FakeService:
         activity["id"] = itemid
         return activity
 
+    def get_item(
+        self, *, entityid: str, itemid: str, version: str | None = None
+    ) -> dict[str, object]:
+        item = dict(ITEM)
+        item["entityid"] = entityid
+        item["id"] = itemid
+        if version is not None:
+            item["version"] = version
+        return item
+
     def list_activities(self, *, entityid: str) -> dict[str, object]:
         activity = dict(ACTIVITY)
         activity["entityid"] = entityid
@@ -219,6 +249,7 @@ class ServerContractTests(unittest.TestCase):
 
         for name in {
             "buzz.get_activity",
+            "buzz.get_item",
             "buzz.list_activities",
             "buzz.get_manifest",
             "buzz.get_course",
@@ -303,6 +334,22 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertEqual(activity["entityid"], "4378")
         self.assertEqual(activity["id"], "assign12")
+
+    def test_mcp_tool_call_returns_structured_item(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.get_item",
+                    {"entityid": "4378", "itemid": "assign12", "version": "7"},
+                )
+            return result.structured_content
+
+        item = asyncio.run(run())
+
+        self.assertEqual(item["entityid"], "4378")
+        self.assertEqual(item["id"], "assign12")
+        self.assertEqual(item["parentid"], "DEFAULT")
+        self.assertEqual(item["version"], "7")
 
     def test_mcp_tool_call_returns_structured_course(self) -> None:
         async def run() -> dict[str, object]:
@@ -398,6 +445,20 @@ class ServerContractTests(unittest.TestCase):
         self.assertEqual(manifest["limit"], 50)
         self.assertEqual(manifest["items"][0]["id"], "DEFAULT")
         self.assertEqual(manifest["items"][1]["path"], ["DEFAULT", "assign12"])
+
+    def test_course_item_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource(
+                    "buzz://course/4378/item/assign12"
+                )
+            return json.loads(result.contents[0].content)
+
+        item = asyncio.run(run())
+
+        self.assertEqual(item["entityid"], "4378")
+        self.assertEqual(item["id"], "assign12")
+        self.assertEqual(item["href"], "Assets/assignment12.htm")
 
     def test_course_manifest_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

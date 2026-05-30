@@ -197,7 +197,7 @@ The current server exposes a narrow, read-only slice:
 | `User` | `buzz.get_user`, user resource | `GetUser2` |
 | `Enrollment` | `buzz.get_enrollment`, `buzz.list_user_enrollments`, `buzz.list_entity_enrollments`, enrollment resources | `GetEnrollment3`, `ListUserEnrollments`, `ListEntityEnrollments` |
 | `Manifest` | `buzz.get_manifest`, manifest summary resource | `GetManifest` |
-| `ActivityItem` | `buzz.get_activity`, `buzz.list_activities`, course item resources | `GetItem`, `GetItemList` |
+| `Item` / `ActivityItem` | `buzz.get_item`, `buzz.get_activity`, `buzz.list_activities`, course item resources | `GetItem`, `GetItemList` |
 | `Submission` report | `buzz.get_submission_report`, submission report resource | `GetStudentSubmission`, `GetItem`, `GetItemList`, `ListQuestions`, obsolete fallback `GetQuestionList` |
 | `Attachment` URL | `buzz.get_attachment_url` | `GetStudentSubmission` with `packagetype=file`, `GetAttemptFile` |
 | Docs metadata | `buzz.docs.search`, `buzz.docs.get_command`, `buzz.docs.get_schema` | Local high-value command, schema, enum, and concept catalog |
@@ -267,7 +267,7 @@ Extend the existing activity model into a richer content graph.
 | Proposed MCP tool | Buzz commands | Output concept | Notes |
 | --- | --- | --- | --- |
 | `buzz.get_manifest` | `GetManifest` | `Manifest` | Implemented as a bounded, depth-first summary. |
-| `buzz.get_item` | `GetItem` | `Item` | Current `buzz.get_activity` can become a normalized view. |
+| `buzz.get_item` | `GetItem` | `Item` | Implemented as normalized metadata without raw item data. |
 | `buzz.list_items` | `GetItemList` | `Item[]` | Add `query`, `itemid`, and `allversions` only after validating output size. |
 | `buzz.search_course_content` | `Search2` | Search result summaries | Use pagination; prefer links to resource/item details. |
 | `buzz.get_resource_info` | `GetResourceInfo2` | `Resource` metadata | Avoid returning raw file contents unless explicitly requested. |
