@@ -19,6 +19,7 @@ EXPECTED_TOOLS = frozenset(
     {
         "buzz.get_activity",
         "buzz.get_item",
+        "buzz.list_items",
         "buzz.list_activities",
         "buzz.get_manifest",
         "buzz.get_course",
@@ -38,6 +39,7 @@ EXPECTED_TOOLS = frozenset(
 EXPECTED_RESOURCE_TEMPLATES = frozenset(
     {
         "buzz.activity",
+        "buzz.course_items",
         "buzz.course_manifest",
         "buzz.course_manifest_summary",
         "buzz.course",

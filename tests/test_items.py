@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 from buzz_submission_mcp.buzz_client import BuzzApiError
-from buzz_submission_mcp.items import extract_item_summary
+from buzz_submission_mcp.items import extract_item_list, extract_item_summary
 
 
 ITEM_XML = """
@@ -35,6 +35,32 @@ ITEM_XML = """
       <dropbox2 type="6" multiple="true" filetypes="pdf|docx" />
     </data>
   </item>
+</response>
+"""
+
+ITEM_LIST_XML = """
+<response code="OK">
+  <items>
+    <item id="Assignment12" version="3">
+      <data>
+        <type>Assignment</type>
+        <parent>DEFAULT</parent>
+        <sequence>a</sequence>
+        <title>Assignment 12</title>
+        <href>Assets/assignment12.htm</href>
+        <gradable>true</gradable>
+      </data>
+    </item>
+    <item id="Lesson1">
+      <data>
+        <type>Lesson</type>
+        <parent>DEFAULT</parent>
+        <sequence>b</sequence>
+        <title>Lesson 1</title>
+        <href>Assets/lesson1.htm</href>
+      </data>
+    </item>
+  </items>
 </response>
 """
 
@@ -90,6 +116,29 @@ class ItemParserTests(unittest.TestCase):
         self.assertEqual(item["title"], "Untyped Item")
         self.assertEqual(item["type"], "")
         self.assertFalse(item["gradable"])
+
+    def test_extract_item_list_returns_bounded_items(self) -> None:
+        payload = extract_item_list(ITEM_LIST_XML, entityid="4378", limit=1)
+
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["total_count"], 2)
+        self.assertEqual(payload["limit"], 1)
+        self.assertTrue(payload["truncated"])
+        self.assertEqual(payload["items"][0]["id"], "Assignment12")
+        self.assertEqual(payload["items"][0]["version"], "3")
+        self.assertTrue(payload["items"][0]["gradable"])
+
+    def test_extract_item_list_allows_empty_results(self) -> None:
+        payload = extract_item_list(
+            '<response code="OK"><items /></response>',
+            entityid="4378",
+            limit=10,
+        )
+
+        self.assertEqual(payload["count"], 0)
+        self.assertEqual(payload["total_count"], 0)
+        self.assertFalse(payload["truncated"])
 
     def test_extract_item_summary_requires_item_node(self) -> None:
         with self.assertRaises(BuzzApiError) as raised:

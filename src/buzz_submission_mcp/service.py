@@ -10,7 +10,7 @@ from .entities import (
     extract_enrollments,
     extract_user,
 )
-from .items import extract_item_summary
+from .items import extract_item_list, extract_item_summary
 from .manifest import extract_manifest_summary
 from .reporting import (
     ItemInfo,
@@ -129,6 +129,15 @@ class BuzzReadService:
                 "count": len(activities),
                 "activities": activities,
             }
+        finally:
+            client.close()
+
+    def list_items(self, *, entityid: str, limit: int = 100) -> dict[str, Any]:
+        limit = _validated_limit(limit)
+        client = self._client_factory()
+        try:
+            item_xml = client.get_item_list(entityid=entityid)
+            return extract_item_list(item_xml, entityid=entityid, limit=limit)
         finally:
             client.close()
 

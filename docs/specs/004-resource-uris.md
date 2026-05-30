@@ -27,6 +27,14 @@ buzz://course/{entityid}/item/{itemid}
 
 Returns normalized `Item` JSON.
 
+### Course Items
+
+```text
+buzz://course/{entityid}/items
+```
+
+Returns the same normalized JSON contract as `buzz.list_items`.
+
 ### Course Manifest
 
 ```text

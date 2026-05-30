@@ -72,6 +72,18 @@ class LiveBuzzSandboxTests(unittest.TestCase):
         self.assertIn("resourceentityid", item)
         self.assertIn("accepts_file_upload", item)
 
+    def test_live_list_items_contract(self) -> None:
+        payload = self.service.list_items(entityid=self.entityid, limit=5)
+
+        self.assertEqual(payload["entityid"], self.entityid)
+        self.assertLessEqual(payload["count"], 5)
+        self.assertGreaterEqual(payload["total_count"], payload["count"])
+        self.assertIsInstance(payload["items"], list)
+        for item in payload["items"]:
+            self.assertIn("id", item)
+            self.assertIn("title", item)
+            self.assertIn("parentid", item)
+
     def test_live_get_manifest_contract(self) -> None:
         manifest = self.service.get_manifest(entityid=self.entityid, limit=5)
 

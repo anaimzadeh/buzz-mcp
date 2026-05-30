@@ -29,7 +29,47 @@ def extract_item_summary(
             details={"parser": "extract_item_summary"},
         )
 
-    itemid = item.attrib.get("id") or item.attrib.get("itemid") or requested_itemid
+    return _item_summary_from_element(
+        item,
+        entityid=entityid,
+        fallback_itemid=requested_itemid,
+    )
+
+
+def extract_item_list(
+    item_xml: str, *, entityid: str, limit: int
+) -> dict[str, Any]:
+    """Normalize GetItemList into a bounded item metadata list."""
+
+    root = parse_xml(item_xml, "GetItemList payload")
+    all_items = [
+        _item_summary_from_element(item, entityid=entityid, fallback_itemid="")
+        for item in _find_item_elements(root)
+    ]
+    items = all_items[:limit]
+
+    return {
+        "entityid": entityid,
+        "count": len(items),
+        "total_count": len(all_items),
+        "limit": limit,
+        "truncated": len(all_items) > len(items),
+        "items": items,
+    }
+
+
+def _item_summary_from_element(
+    item: ET.Element, *, entityid: str, fallback_itemid: str
+) -> dict[str, Any]:
+    data = first_child(item, "data")
+    if data is None:
+        raise BuzzApiError(
+            "Item response missing <data> block.",
+            code="NOT_FOUND",
+            details={"parser": "extract_item_summary"},
+        )
+
+    itemid = item.attrib.get("id") or item.attrib.get("itemid") or fallback_itemid
     title = _data_text(data, "title") or itemid
 
     return {
@@ -63,10 +103,16 @@ def extract_item_summary(
 
 
 def _find_item_element(root: ET.Element) -> ET.Element | None:
-    for element in root.iter():
-        if local_name(element.tag) == "item":
-            return element
-    return None
+    return next(iter(_find_item_elements(root)), None)
+
+
+def _find_item_elements(root: ET.Element) -> list[ET.Element]:
+    return [
+        element
+        for element in root.iter()
+        if local_name(element.tag) in {"item", "_item"}
+        and first_child(element, "data") is not None
+    ]
 
 
 def _data_text(data: ET.Element, name: str) -> str:

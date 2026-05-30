@@ -361,6 +361,32 @@ class BuzzReadServiceTests(unittest.TestCase):
         self.assertFalse(activities[1]["accepts_file_upload"])
         self.assertIn("get_item_list:4378:None", client.calls)
 
+    def test_list_items_returns_bounded_normalized_items(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        payload = service.list_items(entityid="4378", limit=1)
+
+        self.assertTrue(client.closed)
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["total_count"], 2)
+        self.assertEqual(payload["limit"], 1)
+        self.assertTrue(payload["truncated"])
+        self.assertEqual(payload["items"][0]["id"], "assign12")
+        self.assertEqual(payload["items"][0]["parentid"], "")
+        self.assertTrue(payload["items"][0]["accepts_file_upload"])
+        self.assertIn("get_item_list:4378:None", client.calls)
+
+    def test_list_items_validates_limit(self) -> None:
+        service = BuzzReadService(FakeClient)
+
+        with self.assertRaises(BuzzApiError) as raised:
+            service.list_items(entityid="4378", limit=101)
+
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(raised.exception.details["field"], "limit")
+
     def test_get_manifest_returns_bounded_content_tree_summary(self) -> None:
         client = FakeClient()
         service = BuzzReadService(lambda: client)

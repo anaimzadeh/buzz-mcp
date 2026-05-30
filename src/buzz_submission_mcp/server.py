@@ -19,6 +19,7 @@ from .schemas import (
     DOC_SEARCH_SCHEMA,
     ENROLLMENT_LIST_SCHEMA,
     ENROLLMENT_SCHEMA,
+    ITEM_LIST_SCHEMA,
     ITEM_SCHEMA,
     MANIFEST_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
@@ -60,6 +61,18 @@ def get_item(
     """Fetch normalized metadata for a Buzz course content item."""
 
     return _service().get_item(entityid=entityid, itemid=itemid, version=version)
+
+
+@mcp.tool(
+    name="buzz.list_items",
+    title="List Buzz Items",
+    description="Fetch a bounded list of normalized Buzz course content items.",
+    output_schema=schema(ITEM_LIST_SCHEMA),
+)
+def list_items(entityid: str, limit: int = 100) -> dict[str, Any]:
+    """Fetch bounded normalized metadata for Buzz course content items."""
+
+    return _service().list_items(entityid=entityid, limit=limit)
 
 
 @mcp.tool(
@@ -329,6 +342,17 @@ def docs_get_schema(name: str) -> dict[str, Any]:
 )
 def activity_resource(entityid: str, itemid: str) -> dict[str, Any]:
     return get_item(entityid=entityid, itemid=itemid)
+
+
+@mcp.resource(
+    "buzz://course/{entityid}/items",
+    name="buzz.course_items",
+    title="Buzz Course Items",
+    description="Bounded list of normalized Buzz course content items.",
+    mime_type="application/json",
+)
+def course_items_resource(entityid: str) -> dict[str, Any]:
+    return list_items(entityid=entityid)
 
 
 @mcp.resource(

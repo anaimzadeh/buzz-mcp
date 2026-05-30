@@ -170,6 +170,36 @@ class FakeService:
         }
         return {"entityid": entityid, "count": 2, "activities": [activity, lesson]}
 
+    def list_items(self, *, entityid: str, limit: int = 100) -> dict[str, object]:
+        item = dict(ITEM)
+        item["entityid"] = entityid
+        lesson = {
+            **ITEM,
+            "id": "lesson1",
+            "entityid": entityid,
+            "title": "Lesson 1",
+            "type": "Lesson",
+            "abbreviation": "L1",
+            "href": "Assets/lesson1.htm",
+            "accepts_file_upload": False,
+            "allowed_filetypes": "",
+            "dropbox_multiple": False,
+            "perfect_score": "",
+            "due_date": "",
+            "gradable": False,
+            "allow_late_submission": False,
+            "weight": "",
+        }
+        items = [item, lesson][:limit]
+        return {
+            "entityid": entityid,
+            "count": len(items),
+            "total_count": 2,
+            "limit": limit,
+            "truncated": limit < 2,
+            "items": items,
+        }
+
     def get_manifest(self, *, entityid: str, limit: int = 100) -> dict[str, object]:
         manifest = dict(MANIFEST)
         manifest["entityid"] = entityid
@@ -250,6 +280,7 @@ class ServerContractTests(unittest.TestCase):
         for name in {
             "buzz.get_activity",
             "buzz.get_item",
+            "buzz.list_items",
             "buzz.list_activities",
             "buzz.get_manifest",
             "buzz.get_course",
@@ -288,6 +319,7 @@ class ServerContractTests(unittest.TestCase):
         templates = asyncio.run(run())
 
         self.assertIn("buzz://course/{entityid}/item/{itemid}", templates)
+        self.assertIn("buzz://course/{entityid}/items", templates)
         self.assertIn("buzz://course/{entityid}/manifest", templates)
         self.assertIn("buzz://course/{entityid}/manifest/summary", templates)
         self.assertIn("buzz://course/{entityid}", templates)
@@ -430,6 +462,24 @@ class ServerContractTests(unittest.TestCase):
             ["assign12", "lesson1"],
         )
 
+    def test_mcp_tool_call_returns_structured_item_list(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.list_items",
+                    {"entityid": "4378", "limit": 1},
+                )
+            return result.structured_content
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["total_count"], 2)
+        self.assertTrue(payload["truncated"])
+        self.assertEqual(payload["items"][0]["id"], "assign12")
+        self.assertEqual(payload["items"][0]["parentid"], "DEFAULT")
+
     def test_mcp_tool_call_returns_structured_manifest_summary(self) -> None:
         async def run() -> dict[str, object]:
             with patch.object(server, "_service", return_value=FakeService()):
@@ -459,6 +509,21 @@ class ServerContractTests(unittest.TestCase):
         self.assertEqual(item["entityid"], "4378")
         self.assertEqual(item["id"], "assign12")
         self.assertEqual(item["href"], "Assets/assignment12.htm")
+
+    def test_course_items_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource("buzz://course/4378/items")
+            return json.loads(result.contents[0].content)
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["count"], 2)
+        self.assertEqual(
+            [item["id"] for item in payload["items"]],
+            ["assign12", "lesson1"],
+        )
 
     def test_course_manifest_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

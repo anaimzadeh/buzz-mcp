@@ -121,6 +121,27 @@ ITEM_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+ITEM_LIST_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "entityid": STRING,
+        "count": {"type": "integer"},
+        "total_count": {"type": "integer"},
+        "limit": {"type": "integer"},
+        "truncated": {"type": "boolean"},
+        "items": {"type": "array", "items": ITEM_SCHEMA},
+    },
+    "required": [
+        "entityid",
+        "count",
+        "total_count",
+        "limit",
+        "truncated",
+        "items",
+    ],
+    "additionalProperties": False,
+}
+
 MANIFEST_ITEM_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {

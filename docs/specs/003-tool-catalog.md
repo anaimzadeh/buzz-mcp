@@ -43,6 +43,26 @@ Output:
 
 - `Item`.
 
+### `buzz.list_items`
+
+Fetch a bounded list of normalized course content items. The first
+implementation does not expose Buzz's free-form `query`, `itemid`, or
+`allversions` parameters.
+
+Inputs:
+
+- `entityid` string, required.
+- `limit` integer, optional; default `100`, max `100`.
+
+Output:
+
+- `entityid`
+- `count`
+- `total_count`
+- `limit`
+- `truncated`
+- `items` array of `Item`.
+
 ### `buzz.list_activities`
 
 Fetch normalized metadata for every visible activity item in a course.
