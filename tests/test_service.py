@@ -57,6 +57,29 @@ ITEM_LIST_XML = """
 </response>
 """
 
+MANIFEST_XML = """
+<response code="OK">
+  <manifest schema="2" version="4378:15|4378:543" resourceentityid="4378,0">
+    <item id="DEFAULT">
+      <data>
+        <parent>[-MANIFEST-]</parent>
+        <title>Mathematics</title>
+      </data>
+      <item id="assign12">
+        <data>
+          <type>Assignment</type>
+          <parent>DEFAULT</parent>
+          <sequence>a</sequence>
+          <title>Assignment 12</title>
+          <abbreviation>A12</abbreviation>
+          <href>Assets/assignment12.htm</href>
+        </data>
+      </item>
+    </item>
+  </manifest>
+</response>
+"""
+
 COURSE_XML = """
 <response code="OK">
   <course
@@ -153,6 +176,10 @@ class FakeClient:
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str:
         self.calls.append(f"get_item_list:{entityid}:{itemid}")
         return ITEM_XML if itemid else ITEM_LIST_XML
+
+    def get_manifest(self, *, entityid: str) -> str:
+        self.calls.append(f"get_manifest:{entityid}")
+        return MANIFEST_XML
 
     def get_course(self, *, courseid: str, version: str | None = None) -> str:
         self.calls.append(f"get_course:{courseid}:{version}")
@@ -288,6 +315,30 @@ class BuzzReadServiceTests(unittest.TestCase):
         self.assertTrue(activities[0]["accepts_file_upload"])
         self.assertFalse(activities[1]["accepts_file_upload"])
         self.assertIn("get_item_list:4378:None", client.calls)
+
+    def test_get_manifest_returns_bounded_content_tree_summary(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        manifest = service.get_manifest(entityid="4378", limit=1)
+
+        self.assertTrue(client.closed)
+        self.assertEqual(manifest["entityid"], "4378")
+        self.assertEqual(manifest["version"], "4378:15|4378:543")
+        self.assertEqual(manifest["count"], 1)
+        self.assertEqual(manifest["total_count"], 2)
+        self.assertTrue(manifest["truncated"])
+        self.assertEqual(manifest["items"][0]["id"], "DEFAULT")
+        self.assertIn("get_manifest:4378", client.calls)
+
+    def test_get_manifest_validates_limit(self) -> None:
+        service = BuzzReadService(FakeClient)
+
+        with self.assertRaises(BuzzApiError) as raised:
+            service.get_manifest(entityid="4378", limit=501)
+
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(raised.exception.details["field"], "limit")
 
     def test_get_course_returns_normalized_course(self) -> None:
         client = FakeClient()

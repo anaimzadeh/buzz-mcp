@@ -120,6 +120,7 @@ The preferred tool names use the `buzz.` namespace:
 | --- | --- |
 | `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
 | `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
+| `buzz.get_manifest` | Return a bounded, depth-first summary of a Buzz course content manifest. |
 | `buzz.get_course` | Return normalized metadata for a Buzz course or course-like entity. |
 | `buzz.list_courses` | Return normalized course records for an explicit Buzz domain. |
 | `buzz.get_user` | Return privacy-redacted metadata for a Buzz user. |
@@ -142,6 +143,7 @@ The PoC exposes read-only resource templates:
 
 ```text
 buzz://course/{entityid}/manifest
+buzz://course/{entityid}/manifest/summary
 buzz://course/{entityid}/item/{itemid}
 buzz://course/{entityid}
 buzz://domain/{domainid}/courses
@@ -240,6 +242,7 @@ It returns:
 
 | Need | Buzz command |
 | --- | --- |
+| Summarize a course content tree | `GetManifest` |
 | Resolve course metadata | `GetCourse2` |
 | List courses in an explicit domain | `ListCourses` |
 | Resolve privacy-redacted user metadata | `GetUser2` |

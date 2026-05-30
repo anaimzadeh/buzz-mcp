@@ -19,6 +19,7 @@ EXPECTED_TOOLS = frozenset(
     {
         "buzz.get_activity",
         "buzz.list_activities",
+        "buzz.get_manifest",
         "buzz.get_course",
         "buzz.list_courses",
         "buzz.get_user",
@@ -37,6 +38,7 @@ EXPECTED_RESOURCE_TEMPLATES = frozenset(
     {
         "buzz.activity",
         "buzz.course_manifest",
+        "buzz.course_manifest_summary",
         "buzz.course",
         "buzz.domain_courses",
         "buzz.user",

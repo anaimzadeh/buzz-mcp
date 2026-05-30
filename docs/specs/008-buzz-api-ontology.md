@@ -196,6 +196,7 @@ The current server exposes a narrow, read-only slice:
 | `Course` | `buzz.get_course`, `buzz.list_courses`, course and domain-courses resources | `GetCourse2`, `ListCourses` |
 | `User` | `buzz.get_user`, user resource | `GetUser2` |
 | `Enrollment` | `buzz.get_enrollment`, `buzz.list_user_enrollments`, `buzz.list_entity_enrollments`, enrollment resources | `GetEnrollment3`, `ListUserEnrollments`, `ListEntityEnrollments` |
+| `Manifest` | `buzz.get_manifest`, manifest summary resource | `GetManifest` |
 | `ActivityItem` | `buzz.get_activity`, `buzz.list_activities`, course item resources | `GetItem`, `GetItemList` |
 | `Submission` report | `buzz.get_submission_report`, submission report resource | `GetStudentSubmission`, `GetItem`, `GetItemList`, `ListQuestions`, obsolete fallback `GetQuestionList` |
 | `Attachment` URL | `buzz.get_attachment_url` | `GetStudentSubmission` with `packagetype=file`, `GetAttemptFile` |
@@ -204,7 +205,8 @@ The current server exposes a narrow, read-only slice:
 
 This maps to the documentation ontology as:
 
-- `Course` -> `Manifest` -> `Item` is partially implemented.
+- `Course` -> `Manifest` -> `Item` is partially implemented with a bounded
+  manifest summary and lightweight activity views.
 - `Enrollment` -> `Submission` -> `Question`/`Attachment` is partially
   implemented.
 - `Course`, `User`, and `Enrollment` are first-class MCP outputs.
@@ -264,7 +266,7 @@ Extend the existing activity model into a richer content graph.
 
 | Proposed MCP tool | Buzz commands | Output concept | Notes |
 | --- | --- | --- | --- |
-| `buzz.get_manifest` | `GetManifest` | `Manifest` | Return summary tree by default. |
+| `buzz.get_manifest` | `GetManifest` | `Manifest` | Implemented as a bounded, depth-first summary. |
 | `buzz.get_item` | `GetItem` | `Item` | Current `buzz.get_activity` can become a normalized view. |
 | `buzz.list_items` | `GetItemList` | `Item[]` | Add `query`, `itemid`, and `allversions` only after validating output size. |
 | `buzz.search_course_content` | `Search2` | Search result summaries | Use pagination; prefer links to resource/item details. |
@@ -274,6 +276,7 @@ Resource templates:
 
 ```text
 buzz://course/{entityid}/manifest/raw
+buzz://course/{entityid}/manifest/summary
 buzz://course/{entityid}/items
 buzz://course/{entityid}/item/{itemid}
 buzz://course/{entityid}/resource/{resourceid}

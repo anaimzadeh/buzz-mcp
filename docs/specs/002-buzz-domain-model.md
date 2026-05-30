@@ -108,6 +108,34 @@ Required fields:
 - `perfect_score`
 - `due_date`
 
+### Manifest
+
+Represents a bounded, depth-first course content tree summary.
+
+Required fields:
+
+- `entityid`
+- `schema_version`
+- `version`
+- `resourceentityid`
+- `count`
+- `total_count`
+- `limit`
+- `truncated`
+- `items`
+
+Each manifest item includes stable tree/navigation fields:
+
+- `id`
+- `title`
+- `type`
+- `parentid`
+- `sequence`
+- `depth`
+- `path`
+- `child_count`
+- `partial`
+
 ### Question
 
 Represents an assessment or activity question.

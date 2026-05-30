@@ -61,6 +61,18 @@ class LiveBuzzSandboxTests(unittest.TestCase):
             {activity["id"] for activity in manifest["activities"]},
         )
 
+    def test_live_get_manifest_contract(self) -> None:
+        manifest = self.service.get_manifest(entityid=self.entityid, limit=5)
+
+        self.assertEqual(manifest["entityid"], self.entityid)
+        self.assertLessEqual(manifest["count"], 5)
+        self.assertGreaterEqual(manifest["total_count"], manifest["count"])
+        self.assertIsInstance(manifest["items"], list)
+        for item in manifest["items"]:
+            self.assertIn("id", item)
+            self.assertIn("title", item)
+            self.assertIn("depth", item)
+
     def test_live_get_course_contract(self) -> None:
         course = self.service.get_course(courseid=self.entityid)
 

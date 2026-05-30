@@ -19,6 +19,7 @@ from .schemas import (
     DOC_SEARCH_SCHEMA,
     ENROLLMENT_LIST_SCHEMA,
     ENROLLMENT_SCHEMA,
+    MANIFEST_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
     USER_SCHEMA,
     schema,
@@ -54,6 +55,20 @@ def list_activities(entityid: str) -> dict[str, Any]:
     """Fetch normalized metadata for Buzz course activity items."""
 
     return _service().list_activities(entityid=entityid)
+
+
+@mcp.tool(
+    name="buzz.get_manifest",
+    title="Get Buzz Manifest",
+    description=(
+        "Fetch a bounded, depth-first summary of a Buzz course content manifest."
+    ),
+    output_schema=schema(MANIFEST_SCHEMA),
+)
+def get_manifest(entityid: str, limit: int = 100) -> dict[str, Any]:
+    """Fetch a normalized Buzz course content manifest summary."""
+
+    return _service().get_manifest(entityid=entityid, limit=limit)
 
 
 @mcp.tool(
@@ -308,6 +323,17 @@ def activity_resource(entityid: str, itemid: str) -> dict[str, Any]:
 )
 def course_manifest_resource(entityid: str) -> dict[str, Any]:
     return list_activities(entityid=entityid)
+
+
+@mcp.resource(
+    "buzz://course/{entityid}/manifest/summary",
+    name="buzz.course_manifest_summary",
+    title="Buzz Course Manifest Summary",
+    description="Bounded, depth-first summary of a Buzz course content manifest.",
+    mime_type="application/json",
+)
+def course_manifest_summary_resource(entityid: str) -> dict[str, Any]:
+    return get_manifest(entityid=entityid)
 
 
 @mcp.resource(

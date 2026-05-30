@@ -41,6 +41,21 @@ Output:
 - `count`
 - `activities` array of `ActivityItem`.
 
+### `buzz.get_manifest`
+
+Fetch a bounded, depth-first summary of a Buzz course content manifest. This is
+the first richer content-graph tool; it returns item hierarchy/navigation
+metadata without raw course data or item content payloads.
+
+Inputs:
+
+- `entityid` string, required.
+- `limit` integer, optional; default `100`, max `500`.
+
+Output:
+
+- `Manifest`.
+
 ### `buzz.get_submission_report`
 
 Fetch and normalize a complete human-readable submission report.

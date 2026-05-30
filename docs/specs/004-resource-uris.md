@@ -36,6 +36,14 @@ buzz://course/{entityid}/manifest
 Returns `entityid`, `count`, and an `activities` array containing normalized
 `ActivityItem` JSON.
 
+### Course Manifest Summary
+
+```text
+buzz://course/{entityid}/manifest/summary
+```
+
+Returns the same normalized JSON contract as `buzz.get_manifest`.
+
 ### Course
 
 ```text

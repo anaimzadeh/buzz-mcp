@@ -60,6 +60,64 @@ ACTIVITY_LIST_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+MANIFEST_ITEM_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "id": STRING,
+        "title": STRING,
+        "type": STRING,
+        "parentid": STRING,
+        "sequence": STRING,
+        "abbreviation": STRING,
+        "href": STRING,
+        "category": STRING,
+        "depth": {"type": "integer"},
+        "path": {"type": "array", "items": STRING},
+        "child_count": {"type": "integer"},
+        "partial": {"type": "boolean"},
+        "resourceentityid": STRING,
+    },
+    "required": [
+        "id",
+        "title",
+        "type",
+        "parentid",
+        "sequence",
+        "depth",
+        "path",
+        "child_count",
+        "partial",
+    ],
+    "additionalProperties": False,
+}
+
+MANIFEST_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "entityid": STRING,
+        "schema_version": STRING,
+        "version": STRING,
+        "resourceentityid": STRING,
+        "count": {"type": "integer"},
+        "total_count": {"type": "integer"},
+        "limit": {"type": "integer"},
+        "truncated": {"type": "boolean"},
+        "items": {"type": "array", "items": MANIFEST_ITEM_SCHEMA},
+    },
+    "required": [
+        "entityid",
+        "schema_version",
+        "version",
+        "resourceentityid",
+        "count",
+        "total_count",
+        "limit",
+        "truncated",
+        "items",
+    ],
+    "additionalProperties": False,
+}
+
 COURSE_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {

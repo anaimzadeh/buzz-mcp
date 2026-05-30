@@ -28,6 +28,49 @@ REPORT = {
     "q_and_a_pairs": [{"question": "Pick one.", "answer": "Yes"}],
 }
 
+MANIFEST = {
+    "entityid": "4378",
+    "schema_version": "2",
+    "version": "4378:15|4378:543",
+    "resourceentityid": "4378,0",
+    "count": 2,
+    "total_count": 2,
+    "limit": 100,
+    "truncated": False,
+    "items": [
+        {
+            "id": "DEFAULT",
+            "title": "Mathematics",
+            "type": "Folder",
+            "parentid": "[-MANIFEST-]",
+            "sequence": "",
+            "abbreviation": "",
+            "href": "",
+            "category": "0",
+            "depth": 0,
+            "path": ["DEFAULT"],
+            "child_count": 1,
+            "partial": False,
+            "resourceentityid": "",
+        },
+        {
+            "id": "assign12",
+            "title": "Assignment 12",
+            "type": "Assignment",
+            "parentid": "DEFAULT",
+            "sequence": "a",
+            "abbreviation": "A12",
+            "href": "Assets/assignment12.htm",
+            "category": "",
+            "depth": 1,
+            "path": ["DEFAULT", "assign12"],
+            "child_count": 0,
+            "partial": False,
+            "resourceentityid": "",
+        },
+    ],
+}
+
 COURSE = {
     "entityid": "4378",
     "title": "Algebra I",
@@ -96,6 +139,12 @@ class FakeService:
             "due_date": "",
         }
         return {"entityid": entityid, "count": 2, "activities": [activity, lesson]}
+
+    def get_manifest(self, *, entityid: str, limit: int = 100) -> dict[str, object]:
+        manifest = dict(MANIFEST)
+        manifest["entityid"] = entityid
+        manifest["limit"] = limit
+        return manifest
 
     def get_submission_report(self, **kwargs: object) -> dict[str, object]:
         return REPORT
@@ -171,6 +220,7 @@ class ServerContractTests(unittest.TestCase):
         for name in {
             "buzz.get_activity",
             "buzz.list_activities",
+            "buzz.get_manifest",
             "buzz.get_course",
             "buzz.list_courses",
             "buzz.get_user",
@@ -208,6 +258,7 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertIn("buzz://course/{entityid}/item/{itemid}", templates)
         self.assertIn("buzz://course/{entityid}/manifest", templates)
+        self.assertIn("buzz://course/{entityid}/manifest/summary", templates)
         self.assertIn("buzz://course/{entityid}", templates)
         self.assertIn("buzz://domain/{domainid}/courses", templates)
         self.assertIn("buzz://user/{userid}", templates)
@@ -332,6 +383,22 @@ class ServerContractTests(unittest.TestCase):
             ["assign12", "lesson1"],
         )
 
+    def test_mcp_tool_call_returns_structured_manifest_summary(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.get_manifest",
+                    {"entityid": "4378", "limit": 50},
+                )
+            return result.structured_content
+
+        manifest = asyncio.run(run())
+
+        self.assertEqual(manifest["entityid"], "4378")
+        self.assertEqual(manifest["limit"], 50)
+        self.assertEqual(manifest["items"][0]["id"], "DEFAULT")
+        self.assertEqual(manifest["items"][1]["path"], ["DEFAULT", "assign12"])
+
     def test_course_manifest_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:
             with patch.object(server, "_service", return_value=FakeService()):
@@ -346,6 +413,19 @@ class ServerContractTests(unittest.TestCase):
             [activity["id"] for activity in manifest["activities"]],
             ["assign12", "lesson1"],
         )
+
+    def test_course_manifest_summary_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource(
+                    "buzz://course/4378/manifest/summary"
+                )
+            return json.loads(result.contents[0].content)
+
+        manifest = asyncio.run(run())
+
+        self.assertEqual(manifest["entityid"], "4378")
+        self.assertEqual(manifest["items"][0]["type"], "Folder")
 
     def test_course_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

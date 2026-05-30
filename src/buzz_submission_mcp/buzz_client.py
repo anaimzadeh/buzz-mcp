@@ -164,6 +164,10 @@ class BuzzClient:
             params["itemid"] = itemid
         return self._get_text("GetItemList", params)
 
+    def get_manifest(self, *, entityid: str) -> str:
+        params = {"cmd": "getmanifest", "entityid": entityid}
+        return self._get_text("GetManifest", params)
+
     def get_course(self, *, courseid: str, version: str | None = None) -> str:
         params: dict[str, Any] = {"cmd": "getcourse2", "courseid": courseid}
         if version:

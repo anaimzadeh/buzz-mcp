@@ -10,6 +10,7 @@ from .entities import (
     extract_enrollments,
     extract_user,
 )
+from .manifest import extract_manifest_summary
 from .reporting import (
     ItemInfo,
     SubmissionRequest,
@@ -28,6 +29,7 @@ class BuzzReadClient(Protocol):
     def get_student_submission(self, *, enrollmentid: str, itemid: str) -> str: ...
     def get_item(self, *, entityid: str, itemid: str) -> str: ...
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str: ...
+    def get_manifest(self, *, entityid: str) -> str: ...
     def get_course(self, *, courseid: str, version: str | None = None) -> str: ...
     def list_courses(
         self,
@@ -105,6 +107,19 @@ class BuzzReadService:
                 "count": len(activities),
                 "activities": activities,
             }
+        finally:
+            client.close()
+
+    def get_manifest(self, *, entityid: str, limit: int = 100) -> dict[str, Any]:
+        limit = _validated_manifest_limit(limit)
+        client = self._client_factory()
+        try:
+            manifest_xml = client.get_manifest(entityid=entityid)
+            return extract_manifest_summary(
+                manifest_xml,
+                entityid=entityid,
+                limit=limit,
+            )
         finally:
             client.close()
 
@@ -369,6 +384,16 @@ def _validated_limit(limit: int) -> int:
             "limit must be between 1 and 100.",
             code="INVALID_ID",
             details={"field": "limit", "minimum": 1, "maximum": 100},
+        )
+    return limit
+
+
+def _validated_manifest_limit(limit: int) -> int:
+    if limit < 1 or limit > 500:
+        raise BuzzApiError(
+            "limit must be between 1 and 500.",
+            code="INVALID_ID",
+            details={"field": "limit", "minimum": 1, "maximum": 500},
         )
     return limit
 
