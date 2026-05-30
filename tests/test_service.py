@@ -57,6 +57,42 @@ ITEM_LIST_XML = """
 </response>
 """
 
+COURSE_XML = """
+<response code="OK">
+  <course
+    id="4378"
+    title="Algebra I"
+    domainid="100"
+    reference="ALG-1"
+    type="Course"
+    startdate="2025-08-01T00:00:00Z"
+    enddate="2026-05-30T00:00:00Z"
+    version="12" />
+</response>
+"""
+
+ENROLLMENT_XML = """
+<response code="OK">
+  <enrollment
+    id="4317"
+    userid="9001"
+    courseid="4378"
+    privileges="Student"
+    status="1"
+    firstactivitydate="2025-08-10T12:00:00Z"
+    lastactivitydate="2025-09-01T12:00:00Z" />
+</response>
+"""
+
+ENROLLMENTS_XML = """
+<response code="OK">
+  <enrollments>
+    <enrollment id="4317" userid="9001" courseid="4378" privileges="Student" status="1" />
+    <enrollment id="4318" userid="9002" courseid="4378" privileges="Teacher" status="1" />
+  </enrollments>
+</response>
+"""
+
 QUESTION_XML = """
 <response code="OK">
   <question questionid="q-choice">
@@ -94,6 +130,34 @@ class FakeClient:
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str:
         self.calls.append(f"get_item_list:{entityid}:{itemid}")
         return ITEM_XML if itemid else ITEM_LIST_XML
+
+    def get_course(self, *, courseid: str, version: str | None = None) -> str:
+        self.calls.append(f"get_course:{courseid}:{version}")
+        return COURSE_XML
+
+    def get_enrollment(self, *, enrollmentid: str) -> str:
+        self.calls.append(f"get_enrollment:{enrollmentid}")
+        return ENROLLMENT_XML
+
+    def list_user_enrollments(
+        self,
+        *,
+        userid: str,
+        entityid: str | None = None,
+        allstatus: bool = False,
+    ) -> str:
+        self.calls.append(f"list_user_enrollments:{userid}:{entityid}:{allstatus}")
+        return ENROLLMENTS_XML
+
+    def list_entity_enrollments(
+        self,
+        *,
+        entityid: str,
+        userid: str | None = None,
+        allstatus: bool = False,
+    ) -> str:
+        self.calls.append(f"list_entity_enrollments:{entityid}:{userid}:{allstatus}")
+        return ENROLLMENTS_XML
 
     def list_questions(
         self,
@@ -182,6 +246,73 @@ class BuzzReadServiceTests(unittest.TestCase):
         self.assertTrue(activities[0]["accepts_file_upload"])
         self.assertFalse(activities[1]["accepts_file_upload"])
         self.assertIn("get_item_list:4378:None", client.calls)
+
+    def test_get_course_returns_normalized_course(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        course = service.get_course(courseid="4378", version="12")
+
+        self.assertTrue(client.closed)
+        self.assertEqual(course["entityid"], "4378")
+        self.assertEqual(course["title"], "Algebra I")
+        self.assertEqual(course["type"], "Course")
+        self.assertIn("get_course:4378:12", client.calls)
+
+    def test_get_enrollment_returns_normalized_enrollment(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        enrollment = service.get_enrollment(enrollmentid="4317")
+
+        self.assertTrue(client.closed)
+        self.assertEqual(enrollment["enrollmentid"], "4317")
+        self.assertEqual(enrollment["entityid"], "4378")
+        self.assertEqual(enrollment["userid"], "9001")
+        self.assertEqual(enrollment["role"], "Student")
+
+    def test_list_user_enrollments_returns_limited_contract(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        payload = service.list_user_enrollments(
+            userid="9001",
+            entityid="4378",
+            allstatus=True,
+            limit=1,
+        )
+
+        self.assertTrue(client.closed)
+        self.assertEqual(payload["userid"], "9001")
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["limit"], 1)
+        self.assertEqual(payload["enrollments"][0]["enrollmentid"], "4317")
+        self.assertIn("list_user_enrollments:9001:4378:True", client.calls)
+
+    def test_list_entity_enrollments_returns_normalized_contract(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        payload = service.list_entity_enrollments(entityid="4378", userid="9001")
+
+        self.assertTrue(client.closed)
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["userid"], "9001")
+        self.assertEqual(payload["count"], 2)
+        self.assertEqual(
+            [enrollment["enrollmentid"] for enrollment in payload["enrollments"]],
+            ["4317", "4318"],
+        )
+
+    def test_list_enrollments_validates_limit(self) -> None:
+        service = BuzzReadService(FakeClient)
+
+        with self.assertRaises(BuzzApiError) as raised:
+            service.list_entity_enrollments(entityid="4378", limit=101)
+
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(raised.exception.details["field"], "limit")
 
     def test_get_submission_report_uses_buzz_workflow_and_url_builder(self) -> None:
         client = FakeClient()

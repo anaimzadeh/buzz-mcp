@@ -28,6 +28,39 @@ REPORT = {
     "q_and_a_pairs": [{"question": "Pick one.", "answer": "Yes"}],
 }
 
+COURSE = {
+    "entityid": "4378",
+    "title": "Algebra I",
+    "type": "Course",
+    "domainid": "100",
+    "reference": "ALG-1",
+    "guid": "course-guid",
+    "baseid": "200",
+    "start_date": "2025-08-01T00:00:00Z",
+    "end_date": "2026-05-30T00:00:00Z",
+    "days": "304",
+    "term": "Fall",
+    "version": "12",
+}
+
+ENROLLMENT = {
+    "enrollmentid": "4317",
+    "entityid": "4378",
+    "userid": "9001",
+    "role": "Student",
+    "roleid": "",
+    "privileges": "Student",
+    "status": "1",
+    "domainid": "100",
+    "reference": "student-ref",
+    "guid": "enrollment-guid",
+    "start_date": "2025-08-01T00:00:00Z",
+    "end_date": "2026-05-30T00:00:00Z",
+    "first_activity_date": "2025-08-10T12:00:00Z",
+    "last_activity_date": "2025-09-01T12:00:00Z",
+    "version": "4",
+}
+
 
 class FakeService:
     def get_activity(self, *, entityid: str, itemid: str) -> dict[str, object]:
@@ -64,6 +97,40 @@ class FakeService:
             "filepath": kwargs["filepath"],
         }
 
+    def get_course(
+        self, *, courseid: str, version: str | None = None
+    ) -> dict[str, object]:
+        course = dict(COURSE)
+        course["entityid"] = courseid
+        if version is not None:
+            course["version"] = version
+        return course
+
+    def get_enrollment(self, *, enrollmentid: str) -> dict[str, object]:
+        enrollment = dict(ENROLLMENT)
+        enrollment["enrollmentid"] = enrollmentid
+        return enrollment
+
+    def list_user_enrollments(self, **kwargs: object) -> dict[str, object]:
+        enrollment = dict(ENROLLMENT)
+        enrollment["userid"] = kwargs["userid"]
+        return {
+            "userid": kwargs["userid"],
+            "count": 1,
+            "limit": kwargs["limit"],
+            "enrollments": [enrollment],
+        }
+
+    def list_entity_enrollments(self, **kwargs: object) -> dict[str, object]:
+        enrollment = dict(ENROLLMENT)
+        enrollment["entityid"] = kwargs["entityid"]
+        return {
+            "entityid": kwargs["entityid"],
+            "count": 1,
+            "limit": kwargs["limit"],
+            "enrollments": [enrollment],
+        }
+
 
 class ServerContractTests(unittest.TestCase):
     def test_server_registers_poc_tools_with_output_schemas(self) -> None:
@@ -76,6 +143,10 @@ class ServerContractTests(unittest.TestCase):
         for name in {
             "buzz.get_activity",
             "buzz.list_activities",
+            "buzz.get_course",
+            "buzz.get_enrollment",
+            "buzz.list_user_enrollments",
+            "buzz.list_entity_enrollments",
             "buzz.get_submission_report",
             "buzz.get_attachment_url",
             "buzz.docs.search",
@@ -103,6 +174,10 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertIn("buzz://course/{entityid}/item/{itemid}", templates)
         self.assertIn("buzz://course/{entityid}/manifest", templates)
+        self.assertIn("buzz://course/{entityid}", templates)
+        self.assertIn("buzz://enrollment/{enrollmentid}", templates)
+        self.assertIn("buzz://user/{userid}/enrollments", templates)
+        self.assertIn("buzz://course/{entityid}/enrollments", templates)
         self.assertIn(
             "buzz://submission/{enrollmentid}/{itemid}/report{?entityid}",
             templates,
@@ -142,6 +217,36 @@ class ServerContractTests(unittest.TestCase):
         self.assertEqual(activity["entityid"], "4378")
         self.assertEqual(activity["id"], "assign12")
 
+    def test_mcp_tool_call_returns_structured_course(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.get_course",
+                    {"courseid": "4378", "version": "12"},
+                )
+            return result.structured_content
+
+        course = asyncio.run(run())
+
+        self.assertEqual(course["entityid"], "4378")
+        self.assertEqual(course["title"], "Algebra I")
+        self.assertEqual(course["version"], "12")
+
+    def test_mcp_tool_call_returns_structured_entity_enrollments(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.list_entity_enrollments",
+                    {"entityid": "4378", "limit": 10},
+                )
+            return result.structured_content
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["enrollments"][0]["enrollmentid"], "4317")
+
     def test_mcp_tool_call_returns_structured_activity_list(self) -> None:
         async def run() -> dict[str, object]:
             with patch.object(server, "_service", return_value=FakeService()):
@@ -174,6 +279,30 @@ class ServerContractTests(unittest.TestCase):
             [activity["id"] for activity in manifest["activities"]],
             ["assign12", "lesson1"],
         )
+
+    def test_course_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource("buzz://course/4378")
+            return json.loads(result.contents[0].content)
+
+        course = asyncio.run(run())
+
+        self.assertEqual(course["entityid"], "4378")
+        self.assertEqual(course["title"], "Algebra I")
+
+    def test_course_enrollments_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource(
+                    "buzz://course/4378/enrollments"
+                )
+            return json.loads(result.contents[0].content)
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["entityid"], "4378")
+        self.assertEqual(payload["enrollments"][0]["userid"], "9001")
 
     def test_submission_report_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

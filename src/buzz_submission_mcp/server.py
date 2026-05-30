@@ -13,8 +13,11 @@ from .schemas import (
     ACTIVITY_LIST_SCHEMA,
     ACTIVITY_SCHEMA,
     ATTACHMENT_URL_SCHEMA,
+    COURSE_SCHEMA,
     DOC_ENTRY_SCHEMA,
     DOC_SEARCH_SCHEMA,
+    ENROLLMENT_LIST_SCHEMA,
+    ENROLLMENT_SCHEMA,
     SUBMISSION_REPORT_SCHEMA,
     schema,
 )
@@ -49,6 +52,74 @@ def list_activities(entityid: str) -> dict[str, Any]:
     """Fetch normalized metadata for Buzz course activity items."""
 
     return _service().list_activities(entityid=entityid)
+
+
+@mcp.tool(
+    name="buzz.get_course",
+    title="Get Buzz Course",
+    description="Fetch normalized metadata for a Buzz course or course-like entity.",
+    output_schema=schema(COURSE_SCHEMA),
+)
+def get_course(courseid: str, version: str | None = None) -> dict[str, Any]:
+    """Fetch normalized metadata for a Buzz course."""
+
+    return _service().get_course(courseid=courseid, version=version)
+
+
+@mcp.tool(
+    name="buzz.get_enrollment",
+    title="Get Buzz Enrollment",
+    description="Fetch a normalized Buzz enrollment record.",
+    output_schema=schema(ENROLLMENT_SCHEMA),
+)
+def get_enrollment(enrollmentid: str) -> dict[str, Any]:
+    """Fetch a normalized Buzz enrollment."""
+
+    return _service().get_enrollment(enrollmentid=enrollmentid)
+
+
+@mcp.tool(
+    name="buzz.list_user_enrollments",
+    title="List Buzz User Enrollments",
+    description="Fetch normalized Buzz enrollment records for a user.",
+    output_schema=schema(ENROLLMENT_LIST_SCHEMA),
+)
+def list_user_enrollments(
+    userid: str,
+    entityid: str | None = None,
+    allstatus: bool = False,
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Fetch normalized enrollment records for a Buzz user."""
+
+    return _service().list_user_enrollments(
+        userid=userid,
+        entityid=entityid,
+        allstatus=allstatus,
+        limit=limit,
+    )
+
+
+@mcp.tool(
+    name="buzz.list_entity_enrollments",
+    title="List Buzz Entity Enrollments",
+    description="Fetch normalized Buzz enrollment records for a course/entity.",
+    output_schema=schema(ENROLLMENT_LIST_SCHEMA),
+)
+def list_entity_enrollments(
+    entityid: str,
+    userid: str | None = None,
+    allstatus: bool = False,
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Fetch normalized enrollment records for a Buzz course or entity."""
+
+    return _service().list_entity_enrollments(
+        entityid=entityid,
+        userid=userid,
+        allstatus=allstatus,
+        limit=limit,
+    )
 
 
 @mcp.tool(
@@ -196,6 +267,50 @@ def activity_resource(entityid: str, itemid: str) -> dict[str, Any]:
 )
 def course_manifest_resource(entityid: str) -> dict[str, Any]:
     return list_activities(entityid=entityid)
+
+
+@mcp.resource(
+    "buzz://course/{entityid}",
+    name="buzz.course",
+    title="Buzz Course",
+    description="Normalized metadata for a Buzz course or course-like entity.",
+    mime_type="application/json",
+)
+def course_resource(entityid: str) -> dict[str, Any]:
+    return get_course(courseid=entityid)
+
+
+@mcp.resource(
+    "buzz://enrollment/{enrollmentid}",
+    name="buzz.enrollment",
+    title="Buzz Enrollment",
+    description="Normalized metadata for a Buzz enrollment.",
+    mime_type="application/json",
+)
+def enrollment_resource(enrollmentid: str) -> dict[str, Any]:
+    return get_enrollment(enrollmentid=enrollmentid)
+
+
+@mcp.resource(
+    "buzz://user/{userid}/enrollments",
+    name="buzz.user_enrollments",
+    title="Buzz User Enrollments",
+    description="Normalized enrollment records for a Buzz user.",
+    mime_type="application/json",
+)
+def user_enrollments_resource(userid: str) -> dict[str, Any]:
+    return list_user_enrollments(userid=userid)
+
+
+@mcp.resource(
+    "buzz://course/{entityid}/enrollments",
+    name="buzz.course_enrollments",
+    title="Buzz Course Enrollments",
+    description="Normalized enrollment records for a Buzz course/entity.",
+    mime_type="application/json",
+)
+def course_enrollments_resource(entityid: str) -> dict[str, Any]:
+    return list_entity_enrollments(entityid=entityid)
 
 
 @mcp.resource(

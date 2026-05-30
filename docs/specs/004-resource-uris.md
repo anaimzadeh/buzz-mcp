@@ -2,7 +2,8 @@
 
 ## Status
 
-Draft.
+Partially implemented for activity, course, enrollment, enrollment-list, and
+submission-report read resources.
 
 ## URI Scheme
 
@@ -35,6 +36,38 @@ buzz://course/{entityid}/manifest
 Returns `entityid`, `count`, and an `activities` array containing normalized
 `ActivityItem` JSON.
 
+### Course
+
+```text
+buzz://course/{entityid}
+```
+
+Returns normalized `Course` JSON.
+
+### Enrollment
+
+```text
+buzz://enrollment/{enrollmentid}
+```
+
+Returns normalized `Enrollment` JSON.
+
+### User Enrollments
+
+```text
+buzz://user/{userid}/enrollments
+```
+
+Returns the same normalized JSON contract as `buzz.list_user_enrollments`.
+
+### Course Enrollments
+
+```text
+buzz://course/{entityid}/enrollments
+```
+
+Returns the same normalized JSON contract as `buzz.list_entity_enrollments`.
+
 ## Rules
 
 - Resource URIs must not include DLAP tokens, passwords, or signed attachment URLs.
@@ -45,7 +78,6 @@ Returns `entityid`, `count`, and an `activities` array containing normalized
 ## Future Templates
 
 ```text
-buzz://course/{entityid}
 buzz://enrollment/{enrollmentid}/gradebook
 buzz://submission/{enrollmentid}/{itemid}
 buzz://user/{userid}

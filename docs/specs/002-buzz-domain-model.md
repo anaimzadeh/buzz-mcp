@@ -2,7 +2,8 @@
 
 ## Status
 
-Draft.
+Partially implemented for `Course`, `Enrollment`, `ActivityItem`,
+`Submission`, and `Attachment` read contracts.
 
 ## Principle
 
@@ -40,6 +41,18 @@ Required fields:
 - `title`
 - `type`
 
+Implemented optional fields:
+
+- `domainid`
+- `reference`
+- `guid`
+- `baseid`
+- `start_date`
+- `end_date`
+- `days`
+- `term`
+- `version`
+
 ### Enrollment
 
 Represents a user's enrollment in a course.
@@ -51,6 +64,22 @@ Required fields:
 - `userid`
 - `role`
 - `status`
+
+Implemented optional fields:
+
+- `roleid`
+- `privileges`
+- `domainid`
+- `reference`
+- `guid`
+- `start_date`
+- `end_date`
+- `first_activity_date`
+- `last_activity_date`
+- `version`
+
+Until role lookup is implemented, `role` is derived from Buzz's `role`,
+`roleid`, or `privileges` attributes in that order.
 
 ### ActivityItem
 

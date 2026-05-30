@@ -3,7 +3,8 @@
 ## Status
 
 Partially implemented for the read-only submission review tools and local Buzz
-docs metadata tools.
+docs metadata tools. The first core entity graph slice is also implemented for
+courses and enrollments.
 
 ## Naming
 
@@ -54,6 +55,69 @@ Inputs:
 Output:
 
 - `Submission`.
+
+### `buzz.get_course`
+
+Fetch normalized metadata for a Buzz course or course-like entity.
+
+Inputs:
+
+- `courseid` string, required.
+- `version` string, optional.
+
+Output:
+
+- `Course`.
+
+### `buzz.get_enrollment`
+
+Fetch one normalized Buzz enrollment record.
+
+Inputs:
+
+- `enrollmentid` string, required.
+
+Output:
+
+- `Enrollment`.
+
+### `buzz.list_user_enrollments`
+
+Fetch normalized enrollment records for a Buzz user.
+
+Inputs:
+
+- `userid` string, required.
+- `entityid` string, optional.
+- `allstatus` boolean, optional; default `false`.
+- `limit` integer, optional; default `50`, max `100`.
+
+Output:
+
+- `userid`
+- `entityid` when provided.
+- `count`
+- `limit`
+- `enrollments` array of `Enrollment`.
+
+### `buzz.list_entity_enrollments`
+
+Fetch normalized enrollment records for a Buzz course/entity.
+
+Inputs:
+
+- `entityid` string, required.
+- `userid` string, optional.
+- `allstatus` boolean, optional; default `false`.
+- `limit` integer, optional; default `50`, max `100`.
+
+Output:
+
+- `entityid`
+- `userid` when provided.
+- `count`
+- `limit`
+- `enrollments` array of `Enrollment`.
 
 ### `buzz.get_attachment_url`
 
@@ -116,10 +180,8 @@ Output:
 
 ## Next Read-Only Tools
 
-- `buzz.get_course`
 - `buzz.list_courses`
 - `buzz.get_user`
-- `buzz.list_enrollments`
 - `buzz.get_gradebook`
 - `buzz.get_submission_state`
 - `buzz.search_course_content`

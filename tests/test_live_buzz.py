@@ -61,6 +61,22 @@ class LiveBuzzSandboxTests(unittest.TestCase):
             {activity["id"] for activity in manifest["activities"]},
         )
 
+    def test_live_get_course_contract(self) -> None:
+        course = self.service.get_course(courseid=self.entityid)
+
+        self.assertEqual(course["entityid"], self.entityid)
+        self.assertIsInstance(course["title"], str)
+        self.assertTrue(course["title"])
+        self.assertIn("type", course)
+
+    def test_live_get_enrollment_contract(self) -> None:
+        enrollment = self.service.get_enrollment(enrollmentid=self.enrollmentid)
+
+        self.assertEqual(enrollment["enrollmentid"], self.enrollmentid)
+        self.assertEqual(enrollment["entityid"], self.entityid)
+        self.assertIsInstance(enrollment["userid"], str)
+        self.assertIn("status", enrollment)
+
     def test_live_get_submission_report_contract(self) -> None:
         report = self.service.get_submission_report(
             enrollmentid=self.enrollmentid,

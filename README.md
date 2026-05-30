@@ -114,6 +114,10 @@ The preferred tool names use the `buzz.` namespace:
 | --- | --- |
 | `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
 | `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
+| `buzz.get_course` | Return normalized metadata for a Buzz course or course-like entity. |
+| `buzz.get_enrollment` | Return a normalized Buzz enrollment record. |
+| `buzz.list_user_enrollments` | Return normalized enrollment records for a user. |
+| `buzz.list_entity_enrollments` | Return normalized enrollment records for a course/entity. |
 | `buzz.get_submission_report` | Return a human-readable submission report. |
 | `buzz.get_attachment_url` | Build an authenticated URL for a known submission attachment path. |
 | `buzz.docs.search` | Search the local high-value Buzz documentation catalog. |
@@ -131,6 +135,10 @@ The PoC exposes read-only resource templates:
 ```text
 buzz://course/{entityid}/manifest
 buzz://course/{entityid}/item/{itemid}
+buzz://course/{entityid}
+buzz://enrollment/{enrollmentid}
+buzz://user/{userid}/enrollments
+buzz://course/{entityid}/enrollments
 buzz://submission/{enrollmentid}/{itemid}/report{?entityid}
 ```
 
@@ -222,6 +230,10 @@ It returns:
 
 | Need | Buzz command |
 | --- | --- |
+| Resolve course metadata | `GetCourse2` |
+| Resolve one enrollment | `GetEnrollment3` |
+| List a user's enrollments | `ListUserEnrollments` |
+| List a course/entity roster | `ListEntityEnrollments` |
 | Student answers + uploaded files | `GetStudentSubmission` (`packagetype=data`) |
 | Resolve the item / assignment / custom activity title and type | `GetItem` (falls back to `GetItemList`) |
 | Resolve question prompts and choice IDs into answer text | `ListQuestions` (falls back to obsolete `GetQuestionList`) |

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable, Literal, Protocol
 
 from .buzz_client import BuzzApiError, BuzzClient
+from .entities import extract_course, extract_enrollment, extract_enrollments
 from .reporting import (
     ItemInfo,
     SubmissionRequest,
@@ -21,6 +22,22 @@ class BuzzReadClient(Protocol):
     def get_student_submission(self, *, enrollmentid: str, itemid: str) -> str: ...
     def get_item(self, *, entityid: str, itemid: str) -> str: ...
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str: ...
+    def get_course(self, *, courseid: str, version: str | None = None) -> str: ...
+    def get_enrollment(self, *, enrollmentid: str) -> str: ...
+    def list_user_enrollments(
+        self,
+        *,
+        userid: str,
+        entityid: str | None = None,
+        allstatus: bool = False,
+    ) -> str: ...
+    def list_entity_enrollments(
+        self,
+        *,
+        entityid: str,
+        userid: str | None = None,
+        allstatus: bool = False,
+    ) -> str: ...
     def list_questions(
         self,
         *,
@@ -72,6 +89,82 @@ class BuzzReadService:
                 "count": len(activities),
                 "activities": activities,
             }
+        finally:
+            client.close()
+
+    def get_course(
+        self, *, courseid: str, version: str | None = None
+    ) -> dict[str, Any]:
+        client = self._client_factory()
+        try:
+            course_xml = client.get_course(courseid=courseid, version=version)
+            return extract_course(course_xml)
+        finally:
+            client.close()
+
+    def get_enrollment(self, *, enrollmentid: str) -> dict[str, Any]:
+        client = self._client_factory()
+        try:
+            enrollment_xml = client.get_enrollment(enrollmentid=enrollmentid)
+            return extract_enrollment(enrollment_xml)
+        finally:
+            client.close()
+
+    def list_user_enrollments(
+        self,
+        *,
+        userid: str,
+        entityid: str | None = None,
+        allstatus: bool = False,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        limit = _validated_limit(limit)
+        client = self._client_factory()
+        try:
+            enrollments_xml = client.list_user_enrollments(
+                userid=userid,
+                entityid=entityid,
+                allstatus=allstatus,
+            )
+            enrollments = extract_enrollments(enrollments_xml)[:limit]
+            payload: dict[str, Any] = {
+                "userid": userid,
+                "count": len(enrollments),
+                "limit": limit,
+                "enrollments": enrollments,
+            }
+            if entityid:
+                payload["entityid"] = entityid
+            return payload
+        finally:
+            client.close()
+
+    def list_entity_enrollments(
+        self,
+        *,
+        entityid: str,
+        userid: str | None = None,
+        allstatus: bool = False,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        limit = _validated_limit(limit)
+        client = self._client_factory()
+        try:
+            enrollments_xml = client.list_entity_enrollments(
+                entityid=entityid,
+                userid=userid,
+                allstatus=allstatus,
+            )
+            enrollments = extract_enrollments(enrollments_xml)[:limit]
+            payload: dict[str, Any] = {
+                "entityid": entityid,
+                "count": len(enrollments),
+                "limit": limit,
+                "enrollments": enrollments,
+            }
+            if userid:
+                payload["userid"] = userid
+            return payload
         finally:
             client.close()
 
@@ -208,3 +301,13 @@ def activity_to_dict(item: ItemInfo, *, entityid: str | None = None) -> dict[str
     if entityid is not None:
         activity["entityid"] = entityid
     return activity
+
+
+def _validated_limit(limit: int) -> int:
+    if limit < 1 or limit > 100:
+        raise BuzzApiError(
+            "limit must be between 1 and 100.",
+            code="INVALID_ID",
+            details={"field": "limit", "minimum": 1, "maximum": 100},
+        )
+    return limit

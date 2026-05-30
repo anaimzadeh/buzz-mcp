@@ -164,6 +164,44 @@ class BuzzClient:
             params["itemid"] = itemid
         return self._get_text("GetItemList", params)
 
+    def get_course(self, *, courseid: str, version: str | None = None) -> str:
+        params: dict[str, Any] = {"cmd": "getcourse2", "courseid": courseid}
+        if version:
+            params["version"] = version
+        return self._get_text("GetCourse2", params)
+
+    def get_enrollment(self, *, enrollmentid: str) -> str:
+        params = {"cmd": "getenrollment3", "enrollmentid": enrollmentid}
+        return self._get_text("GetEnrollment3", params)
+
+    def list_user_enrollments(
+        self,
+        *,
+        userid: str,
+        entityid: str | None = None,
+        allstatus: bool = False,
+    ) -> str:
+        params: dict[str, Any] = {"cmd": "listuserenrollments", "userid": userid}
+        if entityid:
+            params["entityid"] = entityid
+        if allstatus:
+            params["allstatus"] = "true"
+        return self._get_text("ListUserEnrollments", params)
+
+    def list_entity_enrollments(
+        self,
+        *,
+        entityid: str,
+        userid: str | None = None,
+        allstatus: bool = False,
+    ) -> str:
+        params: dict[str, Any] = {"cmd": "listentityenrollments", "entityid": entityid}
+        if userid:
+            params["userid"] = userid
+        if allstatus:
+            params["allstatus"] = "true"
+        return self._get_text("ListEntityEnrollments", params)
+
     def list_questions(
         self,
         *,

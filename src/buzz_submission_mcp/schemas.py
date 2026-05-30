@@ -60,6 +60,62 @@ ACTIVITY_LIST_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+COURSE_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "entityid": STRING,
+        "title": STRING,
+        "type": STRING,
+        "domainid": STRING,
+        "reference": STRING,
+        "guid": STRING,
+        "baseid": STRING,
+        "start_date": STRING,
+        "end_date": STRING,
+        "days": STRING,
+        "term": STRING,
+        "version": STRING,
+    },
+    "required": ["entityid", "title", "type"],
+    "additionalProperties": False,
+}
+
+ENROLLMENT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "enrollmentid": STRING,
+        "entityid": STRING,
+        "userid": STRING,
+        "role": STRING,
+        "roleid": STRING,
+        "privileges": STRING,
+        "status": STRING,
+        "domainid": STRING,
+        "reference": STRING,
+        "guid": STRING,
+        "start_date": STRING,
+        "end_date": STRING,
+        "first_activity_date": STRING,
+        "last_activity_date": STRING,
+        "version": STRING,
+    },
+    "required": ["enrollmentid", "entityid", "userid", "role", "status"],
+    "additionalProperties": False,
+}
+
+ENROLLMENT_LIST_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "userid": STRING,
+        "entityid": STRING,
+        "count": {"type": "integer"},
+        "limit": {"type": "integer"},
+        "enrollments": {"type": "array", "items": ENROLLMENT_SCHEMA},
+    },
+    "required": ["count", "limit", "enrollments"],
+    "additionalProperties": False,
+}
+
 QA_PAIR_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {

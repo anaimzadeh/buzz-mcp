@@ -193,6 +193,8 @@ The current server exposes a narrow, read-only slice:
 
 | MCP concept | Tool/resource | Buzz commands |
 | --- | --- | --- |
+| `Course` | `buzz.get_course`, course resource | `GetCourse2` |
+| `Enrollment` | `buzz.get_enrollment`, `buzz.list_user_enrollments`, `buzz.list_entity_enrollments`, enrollment resources | `GetEnrollment3`, `ListUserEnrollments`, `ListEntityEnrollments` |
 | `ActivityItem` | `buzz.get_activity`, `buzz.list_activities`, course item resources | `GetItem`, `GetItemList` |
 | `Submission` report | `buzz.get_submission_report`, submission report resource | `GetStudentSubmission`, `GetItem`, `GetItemList`, `ListQuestions`, obsolete fallback `GetQuestionList` |
 | `Attachment` URL | `buzz.get_attachment_url` | `GetStudentSubmission` with `packagetype=file`, `GetAttemptFile` |
@@ -204,8 +206,9 @@ This maps to the documentation ontology as:
 - `Course` -> `Manifest` -> `Item` is partially implemented.
 - `Enrollment` -> `Submission` -> `Question`/`Attachment` is partially
   implemented.
-- `User`, `Course`, `Enrollment`, and `Gradebook` are specified in local docs
-  but not yet first-class MCP outputs.
+- `Course` and `Enrollment` are first-class MCP outputs.
+- `User` and `Gradebook` are specified in local docs but not yet first-class
+  MCP outputs.
 
 ## Recommended MCP Build Sequence
 
@@ -238,12 +241,12 @@ large gradebook or collaboration surfaces.
 
 | Proposed MCP tool | Buzz commands | Output concept | Notes |
 | --- | --- | --- | --- |
-| `buzz.get_course` | `GetCourse2` | `Course` | Match local `Course` domain model. |
+| `buzz.get_course` | `GetCourse2` | `Course` | Implemented. |
 | `buzz.list_courses` | `ListCourses` | `Course[]` | Add filtering and limit arguments. |
 | `buzz.get_user` | `GetUser2` | `User` | Redact/omit unnecessary PII by default. |
-| `buzz.get_enrollment` | `GetEnrollment3` | `Enrollment` | Include joined user/entity only when requested. |
-| `buzz.list_user_enrollments` | `ListUserEnrollments` | `Enrollment[]` | Best student/teacher entry point. |
-| `buzz.list_entity_enrollments` | `ListEntityEnrollments` | `Enrollment[]` | Best class roster entry point; privacy-sensitive. |
+| `buzz.get_enrollment` | `GetEnrollment3` | `Enrollment` | Implemented without joined user/entity expansion. |
+| `buzz.list_user_enrollments` | `ListUserEnrollments` | `Enrollment[]` | Implemented with service-side limit. |
+| `buzz.list_entity_enrollments` | `ListEntityEnrollments` | `Enrollment[]` | Implemented with service-side limit; privacy-sensitive. |
 
 Resource templates:
 
