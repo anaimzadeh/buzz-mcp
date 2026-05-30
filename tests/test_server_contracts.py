@@ -116,6 +116,19 @@ class FakeService:
             course["version"] = version
         return course
 
+    def list_courses(self, **kwargs: object) -> dict[str, object]:
+        course = dict(COURSE)
+        course["domainid"] = kwargs["domainid"]
+        return {
+            "domainid": kwargs["domainid"],
+            "includedescendantdomains": kwargs["includedescendantdomains"],
+            "show": kwargs["show"],
+            "text": kwargs.get("text") or "",
+            "count": 1,
+            "limit": kwargs["limit"],
+            "courses": [course],
+        }
+
     def get_user(self, *, userid: str) -> dict[str, object]:
         user = dict(USER)
         user["id"] = userid
@@ -159,6 +172,7 @@ class ServerContractTests(unittest.TestCase):
             "buzz.get_activity",
             "buzz.list_activities",
             "buzz.get_course",
+            "buzz.list_courses",
             "buzz.get_user",
             "buzz.get_enrollment",
             "buzz.list_user_enrollments",
@@ -180,6 +194,10 @@ class ServerContractTests(unittest.TestCase):
             tools["buzz.docs.search"].parameters["properties"]["entry_type"]["enum"],
             ["any", "command", "schema", "enum", "concept"],
         )
+        self.assertEqual(
+            tools["buzz.list_courses"].parameters["properties"]["show"]["enum"],
+            ["current", "active"],
+        )
 
     def test_server_registers_resource_templates(self) -> None:
         async def run() -> set[str]:
@@ -191,6 +209,7 @@ class ServerContractTests(unittest.TestCase):
         self.assertIn("buzz://course/{entityid}/item/{itemid}", templates)
         self.assertIn("buzz://course/{entityid}/manifest", templates)
         self.assertIn("buzz://course/{entityid}", templates)
+        self.assertIn("buzz://domain/{domainid}/courses", templates)
         self.assertIn("buzz://user/{userid}", templates)
         self.assertIn("buzz://enrollment/{enrollmentid}", templates)
         self.assertIn("buzz://user/{userid}/enrollments", templates)
@@ -248,6 +267,22 @@ class ServerContractTests(unittest.TestCase):
         self.assertEqual(course["entityid"], "4378")
         self.assertEqual(course["title"], "Algebra I")
         self.assertEqual(course["version"], "12")
+
+    def test_mcp_tool_call_returns_structured_course_list(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.call_tool(
+                    "buzz.list_courses",
+                    {"domainid": "100", "show": "active", "limit": 10},
+                )
+            return result.structured_content
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["domainid"], "100")
+        self.assertEqual(payload["show"], "active")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["courses"][0]["entityid"], "4378")
 
     def test_mcp_tool_call_returns_privacy_redacted_user(self) -> None:
         async def run() -> dict[str, object]:
@@ -322,6 +357,17 @@ class ServerContractTests(unittest.TestCase):
 
         self.assertEqual(course["entityid"], "4378")
         self.assertEqual(course["title"], "Algebra I")
+
+    def test_domain_courses_resource_returns_json_content(self) -> None:
+        async def run() -> dict[str, object]:
+            with patch.object(server, "_service", return_value=FakeService()):
+                result = await server.mcp.read_resource("buzz://domain/100/courses")
+            return json.loads(result.contents[0].content)
+
+        payload = asyncio.run(run())
+
+        self.assertEqual(payload["domainid"], "100")
+        self.assertEqual(payload["courses"][0]["title"], "Algebra I")
 
     def test_user_resource_returns_json_content(self) -> None:
         async def run() -> dict[str, object]:

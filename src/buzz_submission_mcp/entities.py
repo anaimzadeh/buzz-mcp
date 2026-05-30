@@ -21,6 +21,17 @@ def extract_course(course_xml: str) -> dict[str, Any]:
     return course_to_dict(course)
 
 
+def extract_courses(courses_xml: str) -> list[dict[str, Any]]:
+    """Normalize a ListCourses response into MCP Course contracts."""
+
+    root = parse_xml(courses_xml, "ListCourses payload")
+    return [
+        course_to_dict(element)
+        for element in root.iter()
+        if local_name(element.tag) in {"course", "_course"}
+    ]
+
+
 def extract_user(user_xml: str) -> dict[str, Any]:
     """Normalize a GetUser2 response into the MCP User contract."""
 

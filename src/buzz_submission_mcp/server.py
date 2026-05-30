@@ -13,6 +13,7 @@ from .schemas import (
     ACTIVITY_LIST_SCHEMA,
     ACTIVITY_SCHEMA,
     ATTACHMENT_URL_SCHEMA,
+    COURSE_LIST_SCHEMA,
     COURSE_SCHEMA,
     DOC_ENTRY_SCHEMA,
     DOC_SEARCH_SCHEMA,
@@ -65,6 +66,33 @@ def get_course(courseid: str, version: str | None = None) -> dict[str, Any]:
     """Fetch normalized metadata for a Buzz course."""
 
     return _service().get_course(courseid=courseid, version=version)
+
+
+@mcp.tool(
+    name="buzz.list_courses",
+    title="List Buzz Courses",
+    description=(
+        "Fetch normalized Buzz course records for an explicit domain. "
+        "The tool omits raw query/select expansion and rejects domainid=0."
+    ),
+    output_schema=schema(COURSE_LIST_SCHEMA),
+)
+def list_courses(
+    domainid: str,
+    includedescendantdomains: bool = False,
+    show: Literal["current", "active"] = "current",
+    text: str | None = None,
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Fetch normalized course records for an explicit Buzz domain."""
+
+    return _service().list_courses(
+        domainid=domainid,
+        includedescendantdomains=includedescendantdomains,
+        show=show,
+        text=text,
+        limit=limit,
+    )
 
 
 @mcp.tool(
@@ -291,6 +319,17 @@ def course_manifest_resource(entityid: str) -> dict[str, Any]:
 )
 def course_resource(entityid: str) -> dict[str, Any]:
     return get_course(courseid=entityid)
+
+
+@mcp.resource(
+    "buzz://domain/{domainid}/courses",
+    name="buzz.domain_courses",
+    title="Buzz Domain Courses",
+    description="Normalized course records for an explicit Buzz domain.",
+    mime_type="application/json",
+)
+def domain_courses_resource(domainid: str) -> dict[str, Any]:
+    return list_courses(domainid=domainid)
 
 
 @mcp.resource(

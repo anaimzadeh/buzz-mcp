@@ -69,6 +69,24 @@ class LiveBuzzSandboxTests(unittest.TestCase):
         self.assertTrue(course["title"])
         self.assertIn("type", course)
 
+    @unittest.skipUnless(
+        os.getenv("BUZZ_TEST_DOMAINID"),
+        "BUZZ_TEST_DOMAINID not set",
+    )
+    def test_live_list_courses_contract(self) -> None:
+        payload = self.service.list_courses(
+            domainid=os.environ["BUZZ_TEST_DOMAINID"],
+            text=self.entityid,
+            limit=5,
+        )
+
+        self.assertEqual(payload["domainid"], os.environ["BUZZ_TEST_DOMAINID"])
+        self.assertLessEqual(payload["count"], 5)
+        self.assertIsInstance(payload["courses"], list)
+        for course in payload["courses"]:
+            self.assertIn("entityid", course)
+            self.assertIn("title", course)
+
     def test_live_get_enrollment_contract(self) -> None:
         enrollment = self.service.get_enrollment(enrollmentid=self.enrollmentid)
 

@@ -5,6 +5,7 @@ import unittest
 from buzz_submission_mcp.buzz_client import BuzzApiError
 from buzz_submission_mcp.entities import (
     extract_course,
+    extract_courses,
     extract_enrollment,
     extract_enrollments,
     extract_user,
@@ -26,6 +27,29 @@ COURSE_XML = """
     days="304"
     term="Fall"
     version="12" />
+</response>
+"""
+
+COURSES_XML = """
+<response code="OK">
+  <courses>
+    <course
+      id="4378"
+      title="Algebra I"
+      domainid="100"
+      reference="ALG-1"
+      type="Course"
+      startdate="2025-08-01T00:00:00Z"
+      enddate="2026-05-30T00:00:00Z"
+      version="12" />
+    <_course
+      id="4379"
+      title="Geometry"
+      domainid="100"
+      reference="GEO"
+      type="Continuous"
+      version="3" />
+  </courses>
 </response>
 """
 
@@ -84,6 +108,16 @@ class EntityParserTests(unittest.TestCase):
         self.assertEqual(course["type"], "Course")
         self.assertEqual(course["reference"], "ALG-1")
         self.assertEqual(course["start_date"], "2025-08-01T00:00:00Z")
+
+    def test_extract_courses_accepts_list_response(self) -> None:
+        courses = extract_courses(COURSES_XML)
+
+        self.assertEqual(len(courses), 2)
+        self.assertEqual(
+            [course["entityid"] for course in courses],
+            ["4378", "4379"],
+        )
+        self.assertEqual(courses[1]["title"], "Geometry")
 
     def test_extract_user_returns_privacy_redacted_contract(self) -> None:
         user = extract_user(USER_XML)

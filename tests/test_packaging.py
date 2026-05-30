@@ -111,6 +111,8 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("BUZZ_USERNAME: ${{ secrets.BUZZ_USERNAME }}", workflow)
         self.assertIn("BUZZ_PASSWORD: ${{ secrets.BUZZ_PASSWORD }}", workflow)
         self.assertIn("BUZZ_TEST_ENTITYID: ${{ secrets.BUZZ_TEST_ENTITYID }}", workflow)
+        self.assertIn("BUZZ_TEST_DOMAINID: ${{ secrets.BUZZ_TEST_DOMAINID }}", workflow)
+        self.assertIn("BUZZ_TEST_USERID: ${{ secrets.BUZZ_TEST_USERID }}", workflow)
         self.assertIn(
             "BUZZ_TEST_SANDBOX_ACK: ${{ vars.BUZZ_TEST_SANDBOX_ACK }}",
             workflow,

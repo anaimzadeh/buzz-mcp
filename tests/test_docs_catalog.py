@@ -33,6 +33,7 @@ class DocsCatalogTests(unittest.TestCase):
         }
 
         self.assertIn("GetCourse2", commands)
+        self.assertIn("ListCourses", commands)
         self.assertIn("GetUser2", commands)
         self.assertIn("GetEnrollment3", commands)
         self.assertIn("ListUserEnrollments", commands)

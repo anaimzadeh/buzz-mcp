@@ -69,6 +69,30 @@ Output:
 
 - `Course`.
 
+### `buzz.list_courses`
+
+Fetch normalized course records for an explicit Buzz domain. This tool does not
+allow `domainid=0`, raw free-form `query`, deleted/all course scope, or optional
+`select` expansions in this first implementation.
+
+Inputs:
+
+- `domainid` string, required and must not be `0`.
+- `includedescendantdomains` boolean, optional; default `false`.
+- `show` enum: `current` or `active`; default `current`.
+- `text` string, optional; matches course ID, reference, or title per Buzz.
+- `limit` integer, optional; default `50`, max `100`.
+
+Output:
+
+- `domainid`
+- `includedescendantdomains`
+- `show`
+- `text` when provided.
+- `count`
+- `limit`
+- `courses` array of `Course`.
+
 ### `buzz.get_enrollment`
 
 Fetch one normalized Buzz enrollment record.
@@ -194,7 +218,6 @@ Output:
 
 ## Next Read-Only Tools
 
-- `buzz.list_courses`
 - `buzz.get_gradebook`
 - `buzz.get_submission_state`
 - `buzz.search_course_content`

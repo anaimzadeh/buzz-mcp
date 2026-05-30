@@ -44,6 +44,15 @@ buzz://course/{entityid}
 
 Returns normalized `Course` JSON.
 
+### Domain Courses
+
+```text
+buzz://domain/{domainid}/courses
+```
+
+Returns the same normalized JSON contract as `buzz.list_courses` with default
+current-course scope and limit.
+
 ### Enrollment
 
 ```text

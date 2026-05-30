@@ -56,11 +56,14 @@ export BUZZ_DOMAIN="myschool"
 export BUZZ_TEST_ENTITYID="4378"
 export BUZZ_TEST_ITEMID="assign12"
 export BUZZ_TEST_ENROLLMENTID="4317"
+export BUZZ_TEST_DOMAINID="100"
+export BUZZ_TEST_USERID="9001"
 PYTHONPATH=src python -m unittest tests.test_live_buzz
 ```
 
-`BUZZ_TEST_ATTACHMENT_FILEPATH` is optional and enables direct attachment URL
-contract coverage.
+`BUZZ_TEST_DOMAINID`, `BUZZ_TEST_USERID`, and `BUZZ_TEST_ATTACHMENT_FILEPATH`
+are optional and enable course discovery, user metadata, and direct attachment
+URL contract coverage.
 
 For release validation, the `Live Buzz Sandbox` GitHub Actions workflow runs the
 same live tests manually against the protected `buzz-sandbox` environment. The

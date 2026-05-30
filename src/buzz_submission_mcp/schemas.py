@@ -80,6 +80,28 @@ COURSE_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+COURSE_LIST_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "domainid": STRING,
+        "includedescendantdomains": {"type": "boolean"},
+        "show": {"type": "string", "enum": ["current", "active"]},
+        "text": STRING,
+        "count": {"type": "integer"},
+        "limit": {"type": "integer"},
+        "courses": {"type": "array", "items": COURSE_SCHEMA},
+    },
+    "required": [
+        "domainid",
+        "includedescendantdomains",
+        "show",
+        "count",
+        "limit",
+        "courses",
+    ],
+    "additionalProperties": False,
+}
+
 USER_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {

@@ -193,7 +193,7 @@ The current server exposes a narrow, read-only slice:
 
 | MCP concept | Tool/resource | Buzz commands |
 | --- | --- | --- |
-| `Course` | `buzz.get_course`, course resource | `GetCourse2` |
+| `Course` | `buzz.get_course`, `buzz.list_courses`, course and domain-courses resources | `GetCourse2`, `ListCourses` |
 | `User` | `buzz.get_user`, user resource | `GetUser2` |
 | `Enrollment` | `buzz.get_enrollment`, `buzz.list_user_enrollments`, `buzz.list_entity_enrollments`, enrollment resources | `GetEnrollment3`, `ListUserEnrollments`, `ListEntityEnrollments` |
 | `ActivityItem` | `buzz.get_activity`, `buzz.list_activities`, course item resources | `GetItem`, `GetItemList` |
@@ -242,7 +242,7 @@ large gradebook or collaboration surfaces.
 | Proposed MCP tool | Buzz commands | Output concept | Notes |
 | --- | --- | --- | --- |
 | `buzz.get_course` | `GetCourse2` | `Course` | Implemented. |
-| `buzz.list_courses` | `ListCourses` | `Course[]` | Add filtering and limit arguments. |
+| `buzz.list_courses` | `ListCourses` | `Course[]` | Implemented with explicit nonzero domain ID, current/active scope, text filter, and max limit. |
 | `buzz.get_user` | `GetUser2` | `User` | Implemented with default response only and PII-heavy fields omitted. |
 | `buzz.get_enrollment` | `GetEnrollment3` | `Enrollment` | Implemented without joined user/entity expansion. |
 | `buzz.list_user_enrollments` | `ListUserEnrollments` | `Enrollment[]` | Implemented with service-side limit. |
@@ -252,6 +252,7 @@ Resource templates:
 
 ```text
 buzz://course/{entityid}
+buzz://domain/{domainid}/courses
 buzz://user/{userid}
 buzz://enrollment/{enrollmentid}
 buzz://course/{entityid}/enrollments

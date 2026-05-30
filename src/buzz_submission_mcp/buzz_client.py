@@ -170,6 +170,28 @@ class BuzzClient:
             params["version"] = version
         return self._get_text("GetCourse2", params)
 
+    def list_courses(
+        self,
+        *,
+        domainid: str,
+        includedescendantdomains: bool = False,
+        show: str = "current",
+        text: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        params: dict[str, Any] = {
+            "cmd": "listcourses",
+            "domainid": domainid,
+            "includedescendantdomains": (
+                "true" if includedescendantdomains else "false"
+            ),
+            "show": show,
+            "limit": str(limit),
+        }
+        if text:
+            params["text"] = text
+        return self._get_text("ListCourses", params)
+
     def get_user(self, *, userid: str) -> str:
         params = {"cmd": "getuser2", "userid": userid}
         return self._get_text("GetUser2", params)

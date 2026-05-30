@@ -71,6 +71,15 @@ COURSE_XML = """
 </response>
 """
 
+COURSES_XML = """
+<response code="OK">
+  <courses>
+    <course id="4378" title="Algebra I" domainid="100" reference="ALG-1" type="Course" version="12" />
+    <course id="4379" title="Geometry" domainid="100" reference="GEO" type="Continuous" version="3" />
+  </courses>
+</response>
+"""
+
 USER_XML = """
 <response code="OK">
   <user
@@ -148,6 +157,21 @@ class FakeClient:
     def get_course(self, *, courseid: str, version: str | None = None) -> str:
         self.calls.append(f"get_course:{courseid}:{version}")
         return COURSE_XML
+
+    def list_courses(
+        self,
+        *,
+        domainid: str,
+        includedescendantdomains: bool = False,
+        show: str = "current",
+        text: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        self.calls.append(
+            "list_courses:"
+            f"{domainid}:{includedescendantdomains}:{show}:{text}:{limit}"
+        )
+        return COURSES_XML
 
     def get_user(self, *, userid: str) -> str:
         self.calls.append(f"get_user:{userid}")
@@ -276,6 +300,46 @@ class BuzzReadServiceTests(unittest.TestCase):
         self.assertEqual(course["title"], "Algebra I")
         self.assertEqual(course["type"], "Course")
         self.assertIn("get_course:4378:12", client.calls)
+
+    def test_list_courses_returns_limited_contract(self) -> None:
+        client = FakeClient()
+        service = BuzzReadService(lambda: client)
+
+        payload = service.list_courses(
+            domainid="100",
+            includedescendantdomains=True,
+            show="active",
+            text="Algebra",
+            limit=1,
+        )
+
+        self.assertTrue(client.closed)
+        self.assertEqual(payload["domainid"], "100")
+        self.assertTrue(payload["includedescendantdomains"])
+        self.assertEqual(payload["show"], "active")
+        self.assertEqual(payload["text"], "Algebra")
+        self.assertEqual(payload["count"], 1)
+        self.assertEqual(payload["limit"], 1)
+        self.assertEqual(payload["courses"][0]["entityid"], "4378")
+        self.assertIn("list_courses:100:True:active:Algebra:1", client.calls)
+
+    def test_list_courses_rejects_domain_zero(self) -> None:
+        service = BuzzReadService(FakeClient)
+
+        with self.assertRaises(BuzzApiError) as raised:
+            service.list_courses(domainid="0")
+
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(raised.exception.details["field"], "domainid")
+
+    def test_list_courses_rejects_deleted_or_all_scope(self) -> None:
+        service = BuzzReadService(FakeClient)
+
+        with self.assertRaises(BuzzApiError) as raised:
+            service.list_courses(domainid="100", show="all")  # type: ignore[arg-type]
+
+        self.assertEqual(raised.exception.code, "INVALID_ID")
+        self.assertEqual(raised.exception.details["field"], "show")
 
     def test_get_user_returns_privacy_redacted_user(self) -> None:
         client = FakeClient()

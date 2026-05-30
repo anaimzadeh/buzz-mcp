@@ -80,6 +80,8 @@ export BUZZ_DOMAIN="myschool"
 export BUZZ_TEST_ENTITYID="4378"
 export BUZZ_TEST_ITEMID="assign12"
 export BUZZ_TEST_ENROLLMENTID="4317"
+# Optional: validates course discovery if caller has ReadCourse rights.
+export BUZZ_TEST_DOMAINID="100"
 # Optional: validates direct submission attachment URL generation.
 export BUZZ_TEST_ATTACHMENT_FILEPATH="MyPaper.pdf"
 # Optional: validates privacy-redacted user metadata if caller has ReadUser rights.
@@ -88,8 +90,9 @@ export BUZZ_TEST_USERID="9001"
 PYTHONPATH=src python -m unittest tests.test_live_buzz
 ```
 
-`BUZZ_TEST_ATTACHMENT_FILEPATH` and `BUZZ_TEST_USERID` are optional and enable
-direct attachment URL and user metadata contract coverage.
+`BUZZ_TEST_DOMAINID`, `BUZZ_TEST_ATTACHMENT_FILEPATH`, and `BUZZ_TEST_USERID`
+are optional and enable course discovery, direct attachment URL, and user
+metadata contract coverage.
 
 For the release gate, configure the GitHub environment `buzz-sandbox` with
 these secrets:
@@ -104,8 +107,9 @@ BUZZ_TEST_ENROLLMENTID
 ```
 
 Set the environment variable `BUZZ_TEST_SANDBOX_ACK=1` to confirm that the
-target tenant and submission are safe for live validation. `BUZZ_BASE_URL` and
-`BUZZ_TEST_ATTACHMENT_FILEPATH` are optional secrets. Then run the
+target tenant and submission are safe for live validation. `BUZZ_BASE_URL`,
+`BUZZ_TEST_DOMAINID`, `BUZZ_TEST_ATTACHMENT_FILEPATH`, and `BUZZ_TEST_USERID`
+are optional secrets. Then run the
 `Live Buzz Sandbox` workflow manually from GitHub Actions.
 
 ## PoC Tools
@@ -117,6 +121,7 @@ The preferred tool names use the `buzz.` namespace:
 | `buzz.get_activity` | Return normalized metadata for a Buzz activity item. |
 | `buzz.list_activities` | Return normalized metadata for every activity item in a Buzz course. |
 | `buzz.get_course` | Return normalized metadata for a Buzz course or course-like entity. |
+| `buzz.list_courses` | Return normalized course records for an explicit Buzz domain. |
 | `buzz.get_user` | Return privacy-redacted metadata for a Buzz user. |
 | `buzz.get_enrollment` | Return a normalized Buzz enrollment record. |
 | `buzz.list_user_enrollments` | Return normalized enrollment records for a user. |
@@ -139,6 +144,7 @@ The PoC exposes read-only resource templates:
 buzz://course/{entityid}/manifest
 buzz://course/{entityid}/item/{itemid}
 buzz://course/{entityid}
+buzz://domain/{domainid}/courses
 buzz://user/{userid}
 buzz://enrollment/{enrollmentid}
 buzz://user/{userid}/enrollments
@@ -235,6 +241,7 @@ It returns:
 | Need | Buzz command |
 | --- | --- |
 | Resolve course metadata | `GetCourse2` |
+| List courses in an explicit domain | `ListCourses` |
 | Resolve privacy-redacted user metadata | `GetUser2` |
 | Resolve one enrollment | `GetEnrollment3` |
 | List a user's enrollments | `ListUserEnrollments` |

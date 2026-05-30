@@ -5,6 +5,7 @@ from typing import Any, Callable, Literal, Protocol
 from .buzz_client import BuzzApiError, BuzzClient
 from .entities import (
     extract_course,
+    extract_courses,
     extract_enrollment,
     extract_enrollments,
     extract_user,
@@ -28,6 +29,15 @@ class BuzzReadClient(Protocol):
     def get_item(self, *, entityid: str, itemid: str) -> str: ...
     def get_item_list(self, *, entityid: str, itemid: str | None = None) -> str: ...
     def get_course(self, *, courseid: str, version: str | None = None) -> str: ...
+    def list_courses(
+        self,
+        *,
+        domainid: str,
+        includedescendantdomains: bool = False,
+        show: str = "current",
+        text: str | None = None,
+        limit: int = 50,
+    ) -> str: ...
     def get_user(self, *, userid: str) -> str: ...
     def get_enrollment(self, *, enrollmentid: str) -> str: ...
     def list_user_enrollments(
@@ -105,6 +115,42 @@ class BuzzReadService:
         try:
             course_xml = client.get_course(courseid=courseid, version=version)
             return extract_course(course_xml)
+        finally:
+            client.close()
+
+    def list_courses(
+        self,
+        *,
+        domainid: str,
+        includedescendantdomains: bool = False,
+        show: Literal["current", "active"] = "current",
+        text: str | None = None,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        _validated_domainid(domainid)
+        _validated_course_show(show)
+        limit = _validated_limit(limit)
+        client = self._client_factory()
+        try:
+            courses_xml = client.list_courses(
+                domainid=domainid,
+                includedescendantdomains=includedescendantdomains,
+                show=show,
+                text=text,
+                limit=limit,
+            )
+            courses = extract_courses(courses_xml)[:limit]
+            payload: dict[str, Any] = {
+                "domainid": domainid,
+                "includedescendantdomains": includedescendantdomains,
+                "show": show,
+                "count": len(courses),
+                "limit": limit,
+                "courses": courses,
+            }
+            if text:
+                payload["text"] = text
+            return payload
         finally:
             client.close()
 
@@ -325,3 +371,27 @@ def _validated_limit(limit: int) -> int:
             details={"field": "limit", "minimum": 1, "maximum": 100},
         )
     return limit
+
+
+def _validated_domainid(domainid: str) -> None:
+    if not domainid:
+        raise BuzzApiError(
+            "domainid is required.",
+            code="INVALID_ID",
+            details={"field": "domainid"},
+        )
+    if domainid == "0":
+        raise BuzzApiError(
+            "domainid=0 is too broad for this MCP tool; provide an explicit domain ID.",
+            code="INVALID_ID",
+            details={"field": "domainid", "disallowed": "0"},
+        )
+
+
+def _validated_course_show(show: str) -> None:
+    if show not in {"current", "active"}:
+        raise BuzzApiError(
+            "show must be 'current' or 'active'.",
+            code="INVALID_ID",
+            details={"field": "show", "allowed": ["current", "active"]},
+        )
